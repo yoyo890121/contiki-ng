@@ -30,6 +30,9 @@
 
 #ifndef PROJECT_ROUTER_CONF_H_
 #define PROJECT_ROUTER_CONF_H_
+
+#define NETSTACK_CONF_RDC     nullrdc_driver
+
 /*---------------------------------------------------------------------------*/
 /* Include target-specific header */
 #ifdef TARGET_CONF_PATH

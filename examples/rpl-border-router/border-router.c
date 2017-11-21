@@ -33,10 +33,12 @@
 #include "contiki.h"
 
 PROCESS_NAME(border_router_process);
-
+PROCESS_NAME(node_process);
 #if BORDER_ROUTER_CONF_WEBSERVER
 PROCESS_NAME(webserver_nogui_process);
-AUTOSTART_PROCESSES(&border_router_process, &webserver_nogui_process);
+AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process, &node_process);
+// AUTOSTART_PROCESSES(&border_router_process, &webserver_nogui_process);
 #else /* BORDER_ROUTER_CONF_WEBSERVER */
-AUTOSTART_PROCESSES(&border_router_process);
+AUTOSTART_PROCESSES(&border_router_process, &node_process);
+// AUTOSTART_PROCESSES(&border_router_process);
 #endif /* BORDER_ROUTER_CONF_WEBSERVER */

@@ -1,7 +1,7 @@
 PROJECTDIRS += common
 PREFIX ?= fd00::1/64
 CONTIKI = ../..
-
+MAKE_MAC = MAKE_MAC_TSCH
 -include $(CONTIKI)/Makefile.identify-target
 
 all: border-router.$(TARGET)

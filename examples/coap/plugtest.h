@@ -39,9 +39,9 @@
 #ifndef PLUGTEST_H_
 #define PLUGTEST_H_
 
-#if !defined(CONTIKI_TARGET_NATIVE)
-#warning "Should only be compiled for native!"
-#endif
+// #if !defined(CONTIKI_TARGET_NATIVE)
+// #warning "Should only be compiled for native!"
+// #endif
 
 #define DEBUG 0
 #if DEBUG

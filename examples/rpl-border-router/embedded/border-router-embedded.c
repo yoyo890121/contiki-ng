@@ -99,3 +99,21 @@ PROCESS_THREAD(border_router_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+
+PROCESS(node_process, "RPL Node");
+
+PROCESS_THREAD(node_process, ev, data)
+{
+  static struct etimer etaa;
+  PROCESS_BEGIN();
+  static int i=0;  
+  etimer_set(&etaa, CLOCK_SECOND * 10);  
+  while(1) {
+    printf("10 seconds. \t i=%d \n", i);
+    PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
+    etimer_reset(&etaa);
+    i++;    
+  }
+
+  PROCESS_END();
+}

@@ -98,9 +98,9 @@ extern resource_t res_radio;
 extern resource_t res_sht11;
 #endif
 */
-
+PROCESS(node_process, "RPL Node");
 PROCESS(er_example_server, "Erbium Example Server");
-AUTOSTART_PROCESSES(&er_example_server);
+AUTOSTART_PROCESSES(&er_example_server, &node_process);
 
 PROCESS_THREAD(er_example_server, ev, data)
 {
@@ -179,6 +179,25 @@ PROCESS_THREAD(er_example_server, ev, data)
     }
 #endif /* PLATFORM_HAS_BUTTON */
   }                             /* while (1) */
+
+  PROCESS_END();
+}
+
+
+
+PROCESS_THREAD(node_process, ev, data)
+{
+  static struct etimer etaa;
+  
+  PROCESS_BEGIN();  
+  static int i=0;
+  etimer_set(&etaa, CLOCK_SECOND * 10);  
+  while(1) {
+    printf("10 seconds. \t i=%d \n", i);
+    PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
+    etimer_reset(&etaa);
+    i++;    
+  }
 
   PROCESS_END();
 }
