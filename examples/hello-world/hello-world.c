@@ -42,7 +42,8 @@
 #include <stdio.h> /* For printf() */
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
-AUTOSTART_PROCESSES(&hello_world_process);
+PROCESS(node_process, "Node Timer");
+AUTOSTART_PROCESSES(&hello_world_process, &node_process);
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(hello_world_process, ev, data)
 {
@@ -53,3 +54,17 @@ PROCESS_THREAD(hello_world_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+PROCESS_THREAD(node_process, ev, data)
+{
+  static struct etimer etaa;
+  PROCESS_BEGIN();
+  static int i=0;  
+  etimer_set(&etaa, CLOCK_SECOND * 10);  
+  while(1) {
+    printf("10 seconds. \t i=%d \n", i);
+    PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
+    etimer_reset(&etaa);
+    i++;    
+  }
+  PROCESS_END();
+}
