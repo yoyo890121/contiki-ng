@@ -1,10 +1,10 @@
 CONTIKI_PROJECT = border-router
 all: $(CONTIKI_PROJECT)
 CONTIKI = ../..
+MAKE_MAC = MAKE_MAC_TSCH
 
 # The BR is either native or embedded, and in the latter case must support SLIP
 PLATFORMS_EXCLUDE = nrf52dk
-
 # Include RPL BR module
 MODULES += os/services/rpl-border-router
 # Include webserver module
