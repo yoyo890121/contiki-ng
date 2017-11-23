@@ -38,7 +38,7 @@
  */
 
 #include "contiki.h"
-
+#include "sys/clock.h"
 #include <stdio.h> /* For printf() */
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
@@ -57,11 +57,20 @@ PROCESS_THREAD(hello_world_process, ev, data)
 PROCESS_THREAD(node_process, ev, data)
 {
   static struct etimer etaa;
+  static clock_time_t clock_g, et_next;
+  static rtimer_clock_t rtimer_now;
   PROCESS_BEGIN();
   static int i=0;  
   etimer_set(&etaa, CLOCK_SECOND * 10);  
   while(1) {
+    clock_g = clock_time();
+    rtimer_now = RTIMER_NOW();
+    et_next = etimer_next_expiration_time();
+    printf("============================\n");
     printf("10 seconds. \t i=%d \n", i);
+    printf("next etimer: %lu ticks\n", et_next);
+    printf("clock: %lu ticks\n", clock_g);
+    printf("rtime: %lu ticks\n", rtimer_now);
     PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
     etimer_reset(&etaa);
     i++;    
