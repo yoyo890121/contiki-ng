@@ -9,8 +9,9 @@
 #include <stdlib.h> 
 #include "rest-engine.h"
 #include "coap.h"
+#include "os/sys/clock.h"
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -87,7 +88,19 @@ res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t prefer
     event_threshold_last_change = event_counter;
   }
 }
+#if CONTIKI_TARGET_CC2538DK
+uint64_t get_clock_epoch(void);
+uint64_t get_clock_update_counter(void);
+uint64_t get_software_rtimer_ticks(void);
 
+uint32_t get_high_phy_rtimer(void);
+uint64_t get_high_sof_rtimer(void);
+uint64_t get_last_update_done_rtimer(void);
+uint64_t get_high_last_update_done_rtimer(void);
+
+uint32_t get_strange_happen_counter(void);
+
+#endif
 
 /*
  * Additionally, a handler function named [resource name]_handler must be implemented for each PERIODIC_RESOURCE.
@@ -98,6 +111,42 @@ res_periodic_handler()
 {
   /* This periodic handler will be called every second */
   ++event_counter;
+  
+#if CONTIKI_TARGET_CC2538DK
+  static clock_time_t clock_g;
+  rtimer_clock_t rtimer_now;
+  clock_time_t timer_start = periodic_res_collect.periodic_timer.timer.start;
+
+  clock_g = clock_time();
+  rtimer_now = RTIMER_NOW();
+  PRINTF("clock: %lu ticks\n", clock_g);
+  PRINTF("NextT: %lu ticks\n", timer_start);
+
+  uint64_t rt_clock_epoch;
+  rt_clock_epoch = get_clock_epoch();
+  uint64_t software_rtimer = get_software_rtimer_ticks();
+  uint64_t software_rtimer_update_counter = get_clock_update_counter();
+
+  uint32_t high_phy_rtimer = get_high_phy_rtimer();
+  uint64_t high_sof_rtimer = get_high_sof_rtimer();
+  uint64_t last_update_done_rtimer = get_last_update_done_rtimer();
+  uint64_t high_last_update_done_rtimer = get_high_last_update_done_rtimer();
+  uint32_t strange_happen_counter = get_strange_happen_counter();
+  
+  PRINTF("phy_rtime   : %lu \n", rtimer_now);
+  PRINTF("sof_rtime   : %llu \n", software_rtimer);
+  PRINTF("last_update : %llu \n", last_update_done_rtimer);
+  PRINTF("epoch    : %llu \n", rt_clock_epoch);
+  PRINTF("update count: %llu \n", software_rtimer_update_counter);
+
+
+  PRINTF("high_phy_rtime: %lu \n", high_phy_rtimer);
+  PRINTF("high_sof_rtime: %llu \n", high_sof_rtimer);
+  PRINTF("strange_count : %lu \n", strange_happen_counter);
+  PRINTF("high_last_upda: %llu \n", high_last_update_done_rtimer);
+
+  PRINTF("================\n");
+#endif
 
   /* Will notify subscribers when inter-packet time is match */
   if(event_counter % event_threshold == 0) {
