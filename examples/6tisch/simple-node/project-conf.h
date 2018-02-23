@@ -35,6 +35,15 @@
 #ifndef __PROJECT_CONF_H__
 #define __PROJECT_CONF_H__
 
+/* Use Orchestra  */
+
+#define TSCH_SCHEDULE_CONF_WITH_6TISCH_MINIMAL 0
+#define TSCH_CONF_WITH_LINK_SELECTOR 1
+#define TSCH_CALLBACK_NEW_TIME_SOURCE orchestra_callback_new_time_source
+#define TSCH_CALLBACK_PACKET_READY orchestra_callback_packet_ready
+#define NETSTACK_CONF_ROUTING_NEIGHBOR_ADDED_CALLBACK orchestra_callback_child_added
+#define NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK orchestra_callback_child_removed
+
 /* Set to enable TSCH security */
 #ifndef WITH_SECURITY
 #define WITH_SECURITY 0
@@ -55,7 +64,7 @@
 /*******************************************************/
 
 /* IEEE802.15.4 PANID */
-#define IEEE802154_CONF_PANID 0x81a5
+#define IEEE802154_CONF_PANID 0xabcd
 
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
 #define TSCH_CONF_AUTOSTART 0

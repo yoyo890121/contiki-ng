@@ -47,13 +47,15 @@
 #if UIP_CONF_IPV6_RPL_LITE == 0
 #include "rpl-private.h"
 #endif /* UIP_CONF_IPV6_RPL_LITE == 0 */
+#include "orchestra.h"
 
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"
 
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "RPL Node");
-AUTOSTART_PROCESSES(&node_process);
+PROCESS(print_process, "TSCH Schedule");
+AUTOSTART_PROCESSES(&node_process, &print_process);
 
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(node_process, ev, data)
@@ -70,8 +72,10 @@ PROCESS_THREAD(node_process, ev, data)
 
   if(is_coordinator) {
     rpl_dag_root_init_dag_immediately();
+    printf("is_coordinator\n");
   }
   NETSTACK_MAC.on();
+  orchestra_init();
 
 #if WITH_PERIODIC_ROUTES_PRINT
   {
@@ -95,3 +99,19 @@ PROCESS_THREAD(node_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+#include "tsch-schedule.h"
+PROCESS_THREAD(print_process, ev, data)
+{
+  static struct etimer etaa;
+  PROCESS_BEGIN();
+
+  etimer_set(&etaa, CLOCK_SECOND * 30);
+  while(1) {
+    PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
+    etimer_reset(&etaa);
+    tsch_schedule_print();
+    printf("------------------------\n");
+  }
+
+  PROCESS_END();
+}
