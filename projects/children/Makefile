@@ -4,7 +4,7 @@ all: $(CONTIKI_PROJECT)
 CONTIKI=../..
 
 MAKE_MAC = MAKE_MAC_TSCH
-
+MODULES += os/services/orchestra
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 # define rest resource file

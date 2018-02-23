@@ -33,6 +33,9 @@
 
 #define NETSTACK_CONF_RDC     nullrdc_driver
 
+#define TSCH_SCHEDULE_CONF_WITH_6TISCH_MINIMAL 0
+#define TSCH_CONF_WITH_LINK_SELECTOR 1
+
 /*---------------------------------------------------------------------------*/
 /* Include target-specific header */
 #ifdef TARGET_CONF_PATH
