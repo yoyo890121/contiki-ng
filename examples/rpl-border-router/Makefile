@@ -2,6 +2,7 @@ CONTIKI_PROJECT = border-router
 all: $(CONTIKI_PROJECT)
 CONTIKI = ../..
 MAKE_MAC = MAKE_MAC_TSCH
+MODULES += os/services/orchestra
 
 # The BR is either native or embedded, and in the latter case must support SLIP
 PLATFORMS_EXCLUDE = nrf52dk

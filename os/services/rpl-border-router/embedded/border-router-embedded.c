@@ -45,6 +45,8 @@
 #include "dev/slip.h"
 #include "rpl-border-router.h"
 
+#include "orchestra.h"
+
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
@@ -87,6 +89,7 @@ PROCESS_THREAD(border_router_process, ev, data)
   }
 
   NETSTACK_MAC.on();
+  orchestra_init();
 
   print_local_addresses();
 

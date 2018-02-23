@@ -81,6 +81,8 @@ extern resource_t res_push;
 //   res_b1_sep_b2;
 extern resource_t res_toggle;
 extern resource_t res_collect;
+// extern resource_t res_bcollect;
+
 // #if PLATFORM_HAS_LIGHT
 // #include "dev/light-sensor.h"
 // extern resource_t res_light;
@@ -149,6 +151,8 @@ PROCESS_THREAD(er_example_server, ev, data)
   rest_activate_resource(&res_toggle, "actuators/toggle");
 
   rest_activate_resource(&res_collect, "g/collect");
+  
+  // rest_activate_resource(&res_bcollect, "g/bcollect");
 
 #if PLATFORM_HAS_LEDS
 // /*  rest_activate_resource(&res_leds, "actuators/leds"); */
@@ -201,17 +205,18 @@ PROCESS_THREAD(er_example_server, ev, data)
 
 
 /*---------------------------------------------------------------------------*/
-
+#include "tsch-schedule.h"
 PROCESS_THREAD(node_process, ev, data)
 {
   static struct etimer etaa;
   PROCESS_BEGIN();
 
-  etimer_set(&etaa, CLOCK_SECOND * 60);
+  etimer_set(&etaa, CLOCK_SECOND * 30);
   while(1) {
     PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
     etimer_reset(&etaa);
-
+    tsch_schedule_print();
+    printf("------------------------\n");
   }
 
   PROCESS_END();

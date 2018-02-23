@@ -81,7 +81,7 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   PRINTF("I am res_get hanlder!\n");
   REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
   REST.set_header_max_age(response, res_push.periodic->period / CLOCK_SECOND);
-  REST.set_response_payload(response, buffer, snprintf((char *)buffer, preferred_size, "VERY LONG EVENT %lu", event_counter));
+  REST.set_response_payload(response, buffer, snprintf((char *)buffer, preferred_size, "VERY LONG EVENT %d", event_counter));
 
   /* The REST.subscription_handler() will be called for observable resources by the REST framework. */
 }

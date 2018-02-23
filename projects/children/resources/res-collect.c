@@ -11,7 +11,7 @@
 #include "coap.h"
 #include "os/sys/clock.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -63,7 +63,7 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
   REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
   REST.set_header_max_age(response, res_collect.periodic->period / CLOCK_SECOND);
 
-  REST.set_response_payload(response, buffer, snprintf((char *)buffer, preferred_size, "[Collect] ec: %lu, et: %d, lc, %lu, pc: %lu", event_counter, event_threshold, event_threshold_last_change,packet_counter));
+  REST.set_response_payload(response, buffer, snprintf((char *)buffer, preferred_size, "[Collect] ec: %d, et: %d, lc, %d, pc: %d", event_counter, event_threshold, event_threshold_last_change,packet_counter));
 
   /* The REST.subscription_handler() will be called for observable resources by the REST framework. */
 }
@@ -111,8 +111,8 @@ res_periodic_handler()
 {
   /* This periodic handler will be called every second */
   ++event_counter;
-  
-#if CONTIKI_TARGET_CC2538DK
+
+#if (DEBUG && CONTIKI_TARGET_CC2538DK)
   static clock_time_t clock_g;
   rtimer_clock_t rtimer_now;
   clock_time_t timer_start = periodic_res_collect.periodic_timer.timer.start;

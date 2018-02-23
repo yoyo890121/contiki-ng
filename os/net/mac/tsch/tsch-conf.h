@@ -139,7 +139,7 @@
 #ifdef TSCH_CONF_DEFAULT_HOPPING_SEQUENCE
 #define TSCH_DEFAULT_HOPPING_SEQUENCE TSCH_CONF_DEFAULT_HOPPING_SEQUENCE
 #else
-#define TSCH_DEFAULT_HOPPING_SEQUENCE (uint8_t[]){ 12, 16, 20, 24 }
+#define TSCH_DEFAULT_HOPPING_SEQUENCE (uint8_t[]){ 12 }
 #endif
 
 /* Hopping sequence used for joining (scan channels) */
