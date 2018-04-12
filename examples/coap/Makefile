@@ -4,6 +4,7 @@ CONTIKI_PROJECT = coap-example-server coap-example-client
 all: $(CONTIKI_PROJECT)
 
 CONTIKI=../..
+MAKE_MAC = MAKE_MAC_TSCH
 
 # Do not try to build on Sky because of code size limitation
 PLATFORMS_EXCLUDE = sky

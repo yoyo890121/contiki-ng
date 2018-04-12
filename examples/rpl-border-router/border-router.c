@@ -39,7 +39,8 @@
 
 /* Declare and auto-start this file's process */
 PROCESS(contiki_ng_br, "Contiki-NG Border Router");
-AUTOSTART_PROCESSES(&contiki_ng_br);
+PROCESS(node_process, "Print TSCH Schedle");
+AUTOSTART_PROCESSES(&contiki_ng_br, &node_process);
 
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(contiki_ng_br, ev, data)
@@ -52,6 +53,23 @@ PROCESS_THREAD(contiki_ng_br, ev, data)
 #endif /* BORDER_ROUTER_CONF_WEBSERVER */
 
   LOG_INFO("Contiki-NG Border Router started\n");
+
+  PROCESS_END();
+}
+
+/*---------------------------------------------------------------------------*/
+#include "tsch.h"
+PROCESS_THREAD(node_process, ev, data)
+{
+  static struct etimer etaa;
+  PROCESS_BEGIN();
+
+  etimer_set(&etaa, CLOCK_SECOND * 30);
+  while(1) {
+    PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
+    etimer_reset(&etaa);
+    tsch_schedule_print();
+  }
 
   PROCESS_END();
 }

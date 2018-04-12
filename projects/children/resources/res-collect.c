@@ -6,8 +6,8 @@
  */
 
 #include <string.h>
-#include <stdlib.h> 
-#include "rest-engine.h"
+#include <stdio.h>
+#include "coap-engine.h"
 #include "coap.h"
 #include "os/sys/clock.h"
 
@@ -24,8 +24,8 @@
 #endif
 
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_periodic_handler(void);
 
 PERIODIC_RESOURCE(res_collect,
@@ -52,7 +52,7 @@ static int32_t event_threshold_last_change = 0;
 static int32_t packet_counter = 0;
 
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   /*
    * For minimal complexity, request query and options should be ignored for GET on observable resources.
@@ -60,28 +60,32 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
    * This would be a TODO in the corresponding files in contiki/apps/erbium/!
    */
   PRINTF("I am collect res_get hanlder!\n");
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-  REST.set_header_max_age(response, res_collect.periodic->period / CLOCK_SECOND);
+  coap_set_header_content_format(response, TEXT_PLAIN);
+  coap_set_header_max_age(response, res_collect.periodic->period / CLOCK_SECOND);
+  // coap_set_payload(response, buffer, snprintf((char *)buffer, preferred_size, "VERY LONG EVENT %lu", (unsigned long) event_counter));
 
-  REST.set_response_payload(response, buffer, snprintf((char *)buffer, preferred_size, "[Collect] ec: %d, et: %d, lc, %d, pc: %d", event_counter, event_threshold, event_threshold_last_change,packet_counter));
-
+  #if CONTIKI_TARGET_COOJA
+  coap_set_payload(response, buffer, snprintf((char *)buffer, preferred_size, "[Collect] ec: %d, et: %d, lc, %d, pc: %d", event_counter, event_threshold, event_threshold_last_change,packet_counter));
+  #else 
+  coap_set_payload(response, buffer, snprintf((char *)buffer, preferred_size, "[Collect] ec: %ld, et: %d, lc, %ld, pc: %ld", event_counter, event_threshold, event_threshold_last_change,packet_counter));
+  #endif /* CONTIKI_TARGET_COOJA */
   /* The REST.subscription_handler() will be called for observable resources by the REST framework. */
 }
 
 
 /* Used for update the threshold */
 static void
-res_post_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_post_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   const char *threshold_c = NULL;
   int threshold = -1;
-  if(REST.get_query_variable(request, "threshold", &threshold_c)) {
+  if(coap_get_query_variable(request, "threshold", &threshold_c)) {
     threshold = (int8_t)atoi(threshold_c);
   }
 
   if(threshold < 1) {
     /* Threashold is too smaill ignore it! */
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
+    coap_set_status_code(response, BAD_REQUEST_4_00);
   } else {
     /* Update to new threshold */
     event_threshold = threshold;
@@ -153,6 +157,6 @@ res_periodic_handler()
     ++packet_counter;
     PRINTF("Generate a new packet!\n");
     /* Notify the registered observers which will trigger the res_get_handler to create the response. */
-    REST.notify_subscribers(&res_collect);
+    coap_notify_observers(&res_collect);
   }
 }
