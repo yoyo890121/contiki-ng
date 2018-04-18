@@ -65,8 +65,8 @@
 extern coap_resource_t res_hello;
 // extern coap_resource_t res_push;
 extern coap_resource_t res_toggle;
-extern coap_resource_t res_collect;
-// extern coap_resource_t res_bcollect;
+// extern coap_resource_t res_collect;
+extern coap_resource_t res_bcollect;
 
 PROCESS(er_example_server, "Erbium Example Server");
 PROCESS(node_process, "Print TSCH Schedle");
@@ -103,8 +103,8 @@ PROCESS_THREAD(er_example_server, ev, data)
   coap_activate_resource(&res_hello, "test/hello");
   // coap_activate_resource(&res_push, "test/push");
   coap_activate_resource(&res_toggle, "actuators/toggle");
-  coap_activate_resource(&res_collect, "g/collect");
-  // coap_activate_resource(&res_bcollect, "g/bcollect");
+  // coap_activate_resource(&res_collect, "g/collect");
+  coap_activate_resource(&res_bcollect, "g/bcollect");
 
   /* Define application-specific events here. */
   while(1) {
