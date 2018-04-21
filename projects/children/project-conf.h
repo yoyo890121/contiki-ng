@@ -39,6 +39,7 @@
 #ifndef __PROJECT_ERBIUM_CONF_H__
 #define __PROJECT_ERBIUM_CONF_H__
 
+#define ORCHESTRA_CONF_RULES { &eb_per_time_source, &unicast_per_neighbor_new, &default_common }
 
 /* IP buffer size must match all other hops, in particular the border router. */
 #undef UIP_CONF_BUFFER_SIZE

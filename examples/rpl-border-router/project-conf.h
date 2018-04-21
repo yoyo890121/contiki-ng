@@ -31,6 +31,8 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
+#define ORCHESTRA_CONF_RULES {  &eb_per_time_source, &unicast_per_neighbor_new, &default_common }
+
 #ifndef WEBSERVER_CONF_CFS_CONNS
 #define WEBSERVER_CONF_CFS_CONNS 2
 #endif
