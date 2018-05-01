@@ -3,6 +3,8 @@ all: $(CONTIKI_PROJECT)
 CONTIKI = ../..
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/services/orchestra
+MODULES += os/net/mac/tsch/sixtop
+MODULES += projects/schedule
 
 # The BR is either native or embedded, and in the latter case must support SLIP
 PLATFORMS_EXCLUDE = nrf52dk

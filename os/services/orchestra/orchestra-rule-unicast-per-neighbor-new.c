@@ -42,9 +42,7 @@
 
 #include "contiki.h"
 #include "orchestra.h"
-#include "net/ipv6/uip-ds6-route.h"
 #include "net/packetbuf.h"
-#include "net/routing/routing.h"
 
 #include "sys/log.h"
 #define LOG_MODULE "Orchestra"
@@ -77,15 +75,15 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
   if(linkaddr != NULL && !linkaddr_cmp(linkaddr, &linkaddr_null)) {
     if((orchestra_parent_knows_us || !ORCHESTRA_UNICAST_SENDER_BASED)
        && linkaddr_cmp(&orchestra_parent_linkaddr, linkaddr)) {
-      printf("neighbor_has_uc_link 1.1\n");
+      // printf("neighbor_has_uc_link 1.1\n");
       return 1;
     }
     if(nbr_table_get_from_lladdr(ds6_neighbors, (linkaddr_t *)linkaddr) != NULL) {
-      printf("neighbor_has_uc_link 1.2\n");
+      // printf("neighbor_has_uc_link 1.2\n");
       return 1;
     }
   }
-  printf("neighbor_has_uc_link 0\n");
+  // printf("neighbor_has_uc_link 0\n");
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -105,13 +103,13 @@ add_uc_link(const linkaddr_t *linkaddr)
     tsch_schedule_add_link(sf_unicast, link_options, LINK_TYPE_NORMAL, &tsch_broadcast_address,
           timeslot, channel_offset);
   }
-  printf("added uc link\n");
+  // printf("added uc link\n");
 }
 /*---------------------------------------------------------------------------*/
 static void
 remove_uc_link(const linkaddr_t *linkaddr)
 {
-  printf("remove uc link call\n");
+  // printf("remove uc link call\n");
   uint16_t timeslot;
   struct tsch_link *l;
 
@@ -150,7 +148,7 @@ remove_uc_link(const linkaddr_t *linkaddr)
   } else {
     /* Remove link */
     tsch_schedule_remove_link(sf_unicast, l);
-    printf("remove uc link 2\n");
+    // printf("remove uc link 2\n");
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -175,17 +173,18 @@ select_packet(uint16_t *slotframe, uint16_t *timeslot)
   /* Select data packets we have a unicast link to */
   const linkaddr_t *dest = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
   if(packetbuf_attr(PACKETBUF_ATTR_FRAME_TYPE) == FRAME802154_DATAFRAME
-  && neighbor_has_uc_link(dest)) {
+  && neighbor_has_uc_link(dest) 
+   ) {
     if(slotframe != NULL) {
       *slotframe = slotframe_handle;
     }
     if(timeslot != NULL) {
       *timeslot = get_node_timeslot(dest);
     }
-    printf("uc select_packet 1\n");
+    printf("new uc select_packet 1\n");
     return 1;
   }
-  printf("uc select_packet 0\n");
+  printf("new uc select_packet 0\n");
   return 0;
 }
 /*---------------------------------------------------------------------------*/

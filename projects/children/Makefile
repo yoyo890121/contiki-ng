@@ -5,6 +5,8 @@ CONTIKI=../..
 
 MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/services/orchestra
+MODULES += os/net/mac/tsch/sixtop
+MODULES += projects/schedule
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 # define rest resource file

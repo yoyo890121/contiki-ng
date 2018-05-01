@@ -31,6 +31,8 @@
  */
 
 #include "contiki.h"
+#include "sixtop.h"
+#include "sf-simple.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -39,8 +41,8 @@
 
 /* Declare and auto-start this file's process */
 PROCESS(contiki_ng_br, "Contiki-NG Border Router");
-PROCESS(node_process, "Print TSCH Schedle");
-AUTOSTART_PROCESSES(&contiki_ng_br, &node_process);
+PROCESS(print_schedule, "Print TSCH Schedule");
+AUTOSTART_PROCESSES(&contiki_ng_br, &print_schedule);
 
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(contiki_ng_br, ev, data)
@@ -52,6 +54,7 @@ PROCESS_THREAD(contiki_ng_br, ev, data)
   process_start(&webserver_nogui_process, NULL);
 #endif /* BORDER_ROUTER_CONF_WEBSERVER */
 
+  sixtop_add_sf(&sf_simple_driver);
   LOG_INFO("Contiki-NG Border Router started\n");
 
   PROCESS_END();
@@ -59,7 +62,7 @@ PROCESS_THREAD(contiki_ng_br, ev, data)
 
 /*---------------------------------------------------------------------------*/
 #include "tsch.h"
-PROCESS_THREAD(node_process, ev, data)
+PROCESS_THREAD(print_schedule, ev, data)
 {
   static struct etimer etaa;
   PROCESS_BEGIN();
@@ -68,7 +71,7 @@ PROCESS_THREAD(node_process, ev, data)
   while(1) {
     PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
     etimer_reset(&etaa);
-    tsch_schedule_print();
+    // tsch_schedule_print();
   }
 
   PROCESS_END();

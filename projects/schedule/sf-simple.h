@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2016, Yasuyuki Tanaka
+ * Copyright (c) 2016, Centre for Development of Advanced Computing (C-DAC).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,37 +30,24 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * \addtogroup sixtop
- * @{
- */
-/**
  * \file
- *         6top Configuration
+ *         A 6P Simple Schedule Function
  * \author
+ *         Shalu R <shalur@cdac.in>
+ *         Lijo Thomas <lijo@cdac.in>
  *         Yasuyuki Tanaka <yasuyuki.tanaka@inf.ethz.ch>
  */
 
-#ifndef __SIXTOP_CONF_H__
-#define __SIXTOP_CONF_H__
+#ifndef _SIXTOP_SF_SIMPLE_H_
+#define _SIXTOP_SF_SIMPLE_H_
 
-/**
- * \brief The maximum number of Scheduling Functions in the system.
- */
-#ifdef SIXTOP_CONF_MAX_SCHEDULING_FUNCTIONS
-#define SIXTOP_MAX_SCHEDULING_FUNCTIONS SIXTOP_CONF_MAX_SCHEDULING_FUNCTIONS
-#else
-#define SIXTOP_MAX_SCHEDULING_FUNCTIONS 1
-#endif
+#include "net/linkaddr.h"
 
-/**
- * \brief The maximum number of transactions which the sixtop module can handle
- * at the same time.
- */
-#ifdef SIXTOP_CONF_MAX_TRANSACTIONS
-#define SIXTOP_MAX_TRANSACTIONS SIXTOP_CONF_MAX_TRANSACTIONS
-#else
-#define SIXTOP_MAX_TRANSACTIONS 2
-#endif
+int sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links);
+int sf_simple_remove_links(linkaddr_t *peer_addr);
 
-#endif /* !__SIXTOP_CONF_H__ */
-/** @} */
+#define SF_SIMPLE_MAX_LINKS  3
+#define SF_SIMPLE_SFID       0xf0
+extern const sixtop_sf_t sf_simple_driver;
+
+#endif /* !_SIXTOP_SF_SIMPLE_H_ */

@@ -36,25 +36,15 @@
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "contiki.h"
-#include "contiki-net.h"
 #include "coap-engine.h"
+#include "sixtop.h"
+#include "sf-simple.h"
 
-
-#define DEBUG 1
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
-#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]", (lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3], (lladdr)->addr[4], (lladdr)->addr[5])
-#else
-#define PRINTF(...)
-#define PRINT6ADDR(addr)
-#define PRINTLLADDR(addr)
-#endif
+#include "sys/log.h"
+#define LOG_MODULE "er-server"
+#define LOG_LEVEL LOG_LEVEL_INFO
 
 #include "dev/leds.h"
 
@@ -69,8 +59,9 @@ extern coap_resource_t res_toggle;
 extern coap_resource_t res_bcollect;
 
 PROCESS(er_example_server, "Erbium Example Server");
-PROCESS(node_process, "Print TSCH Schedle");
-AUTOSTART_PROCESSES(&er_example_server, &node_process);
+PROCESS(print_schedule, "Print TSCH Schedule");
+PROCESS(node_process, "RPL Node");
+AUTOSTART_PROCESSES(&er_example_server, &node_process, &print_schedule);
 
 PROCESS_THREAD(er_example_server, ev, data)
 {
@@ -78,19 +69,19 @@ PROCESS_THREAD(er_example_server, ev, data)
 
   PROCESS_PAUSE();
 
-  PRINTF("Starting Erbium Example Server\n");
+  LOG_INFO("Starting Erbium Example Server\n");
   leds_toggle(LEDS_GREEN);
 #ifdef RF_CHANNEL
-  PRINTF("RF channel: %u\n", RF_CHANNEL);
+  LOG_INFO("RF channel: %u\n", RF_CHANNEL);
 #endif
 #ifdef IEEE802154_PANID
-  PRINTF("PAN ID: 0x%04X\n", IEEE802154_PANID);
+  LOG_INFO("PAN ID: 0x%04X\n", IEEE802154_PANID);
 #endif
 
-  PRINTF("uIP buffer: %u\n", UIP_BUFSIZE);
-  PRINTF("LL header: %u\n", UIP_LLH_LEN);
-  PRINTF("IP+UDP header: %u\n", UIP_IPUDPH_LEN);
-  PRINTF("REST max chunk: %u\n", REST_MAX_CHUNK_SIZE);
+  LOG_INFO("uIP buffer: %u\n", UIP_BUFSIZE);
+  LOG_INFO("LL header: %u\n", UIP_LLH_LEN);
+  LOG_INFO("IP+UDP header: %u\n", UIP_IPUDPH_LEN);
+  LOG_INFO("REST max chunk: %u\n", REST_MAX_CHUNK_SIZE);
 
   /* Initialize the REST engine. */
   coap_engine_init();
@@ -109,17 +100,6 @@ PROCESS_THREAD(er_example_server, ev, data)
   /* Define application-specific events here. */
   while(1) {
     PROCESS_WAIT_EVENT();
-// #if PLATFORM_HAS_BUTTON
-//     if(ev == sensors_event && data == &button_sensor) {
-//       PRINTF("*******BUTTON*******\n");
-
-//        Call the event_handler for this application-specific event. 
-//       res_event.trigger();
-
-//       /* Also call the separate response example handler. */
-//       res_separate.resume();
-//     }
-// #endif /* PLATFORM_HAS_BUTTON */
   }  /* while (1) */
 
   PROCESS_END();
@@ -127,7 +107,7 @@ PROCESS_THREAD(er_example_server, ev, data)
 
 /*---------------------------------------------------------------------------*/
 #include "tsch.h"
-PROCESS_THREAD(node_process, ev, data)
+PROCESS_THREAD(print_schedule, ev, data)
 {
   static struct etimer etaa;
   PROCESS_BEGIN();
@@ -136,8 +116,43 @@ PROCESS_THREAD(node_process, ev, data)
   while(1) {
     PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
     etimer_reset(&etaa);
-    tsch_schedule_print();
+    // tsch_schedule_print();
   }
 
   PROCESS_END();
 }
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(node_process, ev, data)
+{
+  static int added_num_of_links = 0;
+  static struct etimer et;
+  struct tsch_neighbor *n;
+
+  PROCESS_BEGIN();
+
+  sixtop_add_sf(&sf_simple_driver);
+
+  etimer_set(&et, CLOCK_SECOND * 30);
+  while(1) {
+    PROCESS_YIELD_UNTIL(etimer_expired(&et));
+    etimer_reset(&et);
+
+    /* Get time-source neighbor */
+    n = tsch_queue_get_time_source();
+
+    if ((added_num_of_links == 1) || (added_num_of_links == 3))
+    {
+      printf("App : Add a link\n");
+      sf_simple_add_links(&n->addr, 1);
+    }
+    else if (added_num_of_links == 5)
+    {
+      printf("App : Delete a link\n");
+      sf_simple_remove_links(&n->addr);
+    }
+    added_num_of_links++;
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
