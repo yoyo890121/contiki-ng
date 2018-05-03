@@ -507,7 +507,7 @@ sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links)
       /* Random selection resulted in a free slot, add it to linklist */
       if(slot_check == 1) {
         cell_list[index].timeslot_offset = random_slot;
-        cell_list[index].channel_offset = 0;
+        cell_list[index].channel_offset = slotframe_handle;
 
         index++;
         slot_check++;

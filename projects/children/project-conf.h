@@ -40,7 +40,7 @@
 #define __PROJECT_ERBIUM_CONF_H__
 
 #define TSCH_LOG_CONF_PER_SLOT                     1
-#define ORCHESTRA_CONF_RULES { &eb_per_time_source, &unicast_per_neighbor_rpl_ns, &default_common }
+#define ORCHESTRA_CONF_RULES { &eb_per_time_source, &unicast_per_neighbor_new, &empty_data, &default_common }
 #define TSCH_CONF_WITH_SIXTOP 1
 
 /* IP buffer size must match all other hops, in particular the border router. */
