@@ -147,7 +147,7 @@ add_links_to_schedule(const linkaddr_t *peer_addr, uint8_t link_option,
            link_option == LINK_OPTION_RX ? "RX" : "TX",
            peer_addr->u8[7]);
     tsch_schedule_add_link(slotframe,
-                           link_option, LINK_TYPE_NORMAL, peer_addr,
+                           link_option, LINK_TYPE_NORMAL, &tsch_broadcast_address,
                            cell.timeslot_offset, cell.channel_offset);
     break;
   }
@@ -579,7 +579,7 @@ sf_simple_remove_links(linkaddr_t *peer_addr)
 
     if(l) {
       /* Non-zero value indicates a scheduled link */
-      if((linkaddr_cmp(&l->addr, peer_addr)) && (l->link_options == LINK_OPTION_TX)) {
+      if(((linkaddr_cmp(&l->addr, peer_addr)) || (linkaddr_cmp(&l->addr, &tsch_broadcast_address))) && (l->link_options == LINK_OPTION_TX)) {
         /* This link is scheduled as a TX link to the specified neighbor */
         cell.timeslot_offset = i;
         cell.channel_offset = l->channel_offset;

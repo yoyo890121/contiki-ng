@@ -61,6 +61,7 @@
 #if TSCH_WITH_SIXTOP
 #include "net/mac/tsch/sixtop/sixtop.h"
 #endif
+#include "sf-simple.h"
 
 #if FRAME802154_VERSION < FRAME802154_IEEE802154_2015
 #error TSCH: FRAME802154_VERSION must be at least FRAME802154_IEEE802154_2015
@@ -654,6 +655,7 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
 
 #ifdef TSCH_CALLBACK_JOINING_NETWORK
       TSCH_CALLBACK_JOINING_NETWORK();
+      sf_simple_add_links(&n->addr, 1);
 #endif
 
       tsch_association_count++;
