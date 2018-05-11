@@ -48,18 +48,17 @@
 #include "net/mac/tsch/sixtop/sixp-trans.h"
 
 #include "sf-simple.h"
+#include "sf-conf.h"
 
 #define DEBUG DEBUG_PRINT
 #include "net/net-debug.h"
-
-#define SCHEDULE_SLOTFRAME_LENGTH 17
 
 typedef struct {
   uint16_t timeslot_offset;
   uint16_t channel_offset;
 } sf_simple_cell_t;
 
-static const uint16_t slotframe_handle = 2;
+static const uint16_t slotframe_handle = SF_SLOTFRAME_HANDLE;
 static uint8_t res_storage[4 + SF_SIMPLE_MAX_LINKS * 4];
 static uint8_t req_storage[4 + SF_SIMPLE_MAX_LINKS * 4];
 
@@ -125,6 +124,7 @@ add_links_to_schedule(const linkaddr_t *peer_addr, uint8_t link_option,
 
   sf_simple_cell_t cell;
   struct tsch_slotframe *slotframe;
+  struct tsch_link *link;
   int i;
 
   assert(cell_list != NULL);
@@ -146,9 +146,10 @@ add_links_to_schedule(const linkaddr_t *peer_addr, uint8_t link_option,
            cell.timeslot_offset,
            link_option == LINK_OPTION_RX ? "RX" : "TX",
            peer_addr->u8[7]);
-    tsch_schedule_add_link(slotframe,
+    link = tsch_schedule_add_link(slotframe,
                            link_option, LINK_TYPE_NORMAL, &tsch_broadcast_address,
                            cell.timeslot_offset, cell.channel_offset);
+    link->real_addr = *peer_addr;
     break;
   }
 }
@@ -484,8 +485,8 @@ sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links)
   assert(peer_addr != NULL && sf != NULL);
 
   do {
-    /* Randomly select a slot offset within SCHEDULE_SLOTFRAME_LENGTH */
-    random_slot = ((random_rand() & 0xFF)) % SCHEDULE_SLOTFRAME_LENGTH;
+    /* Randomly select a slot offset within SF_SLOTFRAME_LENGTH */
+    random_slot = ((random_rand() & 0xFF)) % SF_SLOTFRAME_LENGTH;
 
     if(tsch_schedule_get_link_by_timeslot(sf, random_slot) == NULL) {
 
@@ -511,7 +512,7 @@ sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links)
 
         index++;
         slot_check++;
-      } else if(slot_check > SCHEDULE_SLOTFRAME_LENGTH) {
+      } else if(slot_check > SF_SLOTFRAME_LENGTH) {
         PRINTF("sf-simple:! Number of trials for free slot exceeded...\n");
         return -1;
         break; /* exit while loop */
@@ -574,12 +575,12 @@ sf_simple_remove_links(linkaddr_t *peer_addr)
 
   assert(peer_addr != NULL && sf != NULL);
 
-  for(i = 0; i < SCHEDULE_SLOTFRAME_LENGTH; i++) {
+  for(i = 0; i < SF_SLOTFRAME_LENGTH; i++) {
     l = tsch_schedule_get_link_by_timeslot(sf, i);
 
     if(l) {
       /* Non-zero value indicates a scheduled link */
-      if(((linkaddr_cmp(&l->addr, peer_addr)) || (linkaddr_cmp(&l->addr, &tsch_broadcast_address))) && (l->link_options == LINK_OPTION_TX)) {
+      if(((linkaddr_cmp(&l->addr, peer_addr)) || (linkaddr_cmp(&l->real_addr, peer_addr))) && (l->link_options == LINK_OPTION_TX)) {
         /* This link is scheduled as a TX link to the specified neighbor */
         cell.timeslot_offset = i;
         cell.channel_offset = l->channel_offset;

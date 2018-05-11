@@ -44,6 +44,7 @@
 #include "orchestra.h"
 #include "net/packetbuf.h"
 #include "tsch.h"
+#include "sf-conf.h"
 
 #include "sys/log.h"
 #define LOG_MODULE "Orchestra"
@@ -93,7 +94,7 @@ init(uint16_t sf_handle)
   slotframe_handle = sf_handle;
   channel_offset = sf_handle;
   /* Slotframe for unicast transmissions */
-  sf_data = tsch_schedule_add_slotframe(slotframe_handle, ORCHESTRA_UNICAST_PERIOD);
+  sf_data = tsch_schedule_add_slotframe(slotframe_handle, SF_SLOTFRAME_LENGTH);
 }
 /*---------------------------------------------------------------------------*/
 struct orchestra_rule empty_data = {

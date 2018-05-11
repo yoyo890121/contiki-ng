@@ -1,0 +1,8 @@
+
+#ifndef _SIXTOP_SF_CONF_H_
+#define _SIXTOP_SF_CONF_H_
+
+#define SF_SLOTFRAME_HANDLE 2
+#define SF_SLOTFRAME_LENGTH 17
+
+#endif /* !_SIXTOP_SF_CONF_H_ */
