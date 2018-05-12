@@ -116,6 +116,9 @@ PROCESS_THREAD(print_schedule, ev, data)
   while(1) {
     PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
     etimer_reset(&etaa);
+    struct tsch_neighbor *n = NULL;
+    n = tsch_queue_get_nbr(&tsch_broadcast_address);
+    printf("dedicated_tx_links_count=%d\n", n->dedicated_tx_links_count-1); //-1 for EB slotframe Tx
     tsch_schedule_print();
   }
 

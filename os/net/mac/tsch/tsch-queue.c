@@ -175,7 +175,11 @@ tsch_queue_update_time_source(const linkaddr_t *new_addr)
 
 #ifdef TSCH_CALLBACK_NEW_TIME_SOURCE
         TSCH_CALLBACK_NEW_TIME_SOURCE(old_time_src, new_time_src);
-        printf("Switching Parent\n");
+        #include "sf-callback.h"
+        if(old_time_src != NULL) {
+          printf("Switching Parent\n");
+          sf_simple_switching_parent_callback(&old_time_src->addr, &new_time_src->addr);
+        }        
 #endif
       }
 
@@ -430,7 +434,7 @@ tsch_queue_get_packet_for_nbr(const struct tsch_neighbor *n, struct tsch_link *l
           }
         }
         if(packet_attr_type == FRAME802154_DATAFRAME && packet_attr_metadata==1) {
-          printf("packet_attr_type=DATA & metadata\n");
+          // printf("packet_attr_type=DATA & metadata\n");
           // packet_attr_slotframe = 0xffff;
           // packet_attr_timeslot = 0xffff;
         }         
