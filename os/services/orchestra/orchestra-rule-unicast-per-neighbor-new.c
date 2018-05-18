@@ -43,6 +43,7 @@
 #include "contiki.h"
 #include "orchestra.h"
 #include "net/packetbuf.h"
+#include "net/ipv6/uip-ds6-nbr.h"
 
 #include "sys/log.h"
 #define LOG_MODULE "Orchestra"
