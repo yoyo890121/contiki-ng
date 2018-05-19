@@ -53,6 +53,9 @@
 #define DEBUG DEBUG_PRINT
 #include "net/net-debug.h"
 
+PROCESS_NAME(sf_wait_trans_done_process);
+process_event_t sf_trans_done;
+
 typedef struct {
   uint16_t timeslot_offset;
   uint16_t channel_offset;
@@ -152,6 +155,7 @@ add_links_to_schedule(const linkaddr_t *peer_addr, uint8_t link_option,
     link->real_addr = *peer_addr;
     break;
   }
+  process_post(&sf_wait_trans_done_process, sf_trans_done, NULL);
 }
 
 static void
@@ -630,10 +634,16 @@ timeout(sixp_pkt_cmd_t cmd, const linkaddr_t *peer_addr)
   PRINTF("transaction timeout\n");
 }
 
+static void
+init(void)
+{
+  sf_trans_done = process_alloc_event();
+}
+
 const sixtop_sf_t sf_simple_driver = {
   SF_SIMPLE_SFID,
   CLOCK_SECOND,
-  NULL,
+  init,
   input,
   timeout
 };

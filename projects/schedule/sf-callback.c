@@ -1,36 +1,91 @@
-
+#include "contiki-lib.h"
 #include "lib/assert.h"
 #include "tsch.h"
 #include "net/mac/tsch/sixtop/sixtop.h"
+#include "net/mac/tsch/sixtop/sixp-nbr.h"
+#include "net/mac/tsch/sixtop/sixp-pkt.h"
+#include "net/mac/tsch/sixtop/sixp-trans.h"
+
 #include "sf-callback.h"
 #include "sf-simple.h"
 #include "sf-conf.h"
 
-#include <stdio.h>
+#define DEBUG DEBUG_PRINT
+#include "net/net-debug.h"
 
-void remove_links(linkaddr_t *peer_addr);
+extern process_event_t sf_trans_done;
+
+PROCESS(sf_wait_trans_done_process, "sf wait trans done process");
+
+typedef struct {
+  uint16_t timeslot_offset;
+  uint16_t channel_offset;
+} sf_simple_cell_t;
+
+// static uint8_t res_storage[4 + SF_SIMPLE_MAX_LINKS * 4];
+static uint8_t req_storage[4 + SF_SIMPLE_MAX_LINKS * 4];
+
+
+static void read_cell(const uint8_t *buf, sf_simple_cell_t *cell);
+static void print_cell_list(const uint8_t *cell_list, uint16_t cell_list_len);
+int remove_all_links(linkaddr_t *peer_addr);
 
 void
 sf_simple_switching_parent_callback(linkaddr_t *old_addr, linkaddr_t *new_addr)
 {
-  printf("in sf_simple_switching_parent_callback\n");
+    printf("in sf_simple_switching_parent_callback\n");
   struct tsch_neighbor *n = NULL;
   n = tsch_queue_get_nbr(&tsch_broadcast_address);
   uint8_t dedicated_links_num =  n->dedicated_tx_links_count-1; //-1 for EB slotframe Tx
+
   if(sf_simple_add_links(new_addr, dedicated_links_num) == 0){
     printf("Add to new parent success\n");
-    remove_links(old_addr); //temporary implement, only remove child link
+    process_start(&sf_wait_trans_done_process, old_addr);
     // TODO clear cmd old_addr;
   }
 
 }
 
-void remove_links(linkaddr_t *peer_addr)
+PROCESS_THREAD(sf_wait_trans_done_process, ev, data)
 {
-  uint8_t i = 0;
+  static linkaddr_t *old_addr;
+  PROCESS_BEGIN();
+  old_addr = data;
+  PROCESS_WAIT_EVENT_UNTIL(ev == sf_trans_done);
+  printf("sf_trans_done\n");
+  remove_all_links(old_addr);
+  PROCESS_END();
+}
+
+static void
+read_cell(const uint8_t *buf, sf_simple_cell_t *cell)
+{
+  cell->timeslot_offset = buf[0] + (buf[1] << 8);
+  cell->channel_offset = buf[2] + (buf[3] << 8);
+}
+
+static void
+print_cell_list(const uint8_t *cell_list, uint16_t cell_list_len)
+{
+  uint16_t i;
+  sf_simple_cell_t cell;
+
+  for(i = 0; i < (cell_list_len / sizeof(cell)); i++) {
+    read_cell(&cell_list[i], &cell);
+    PRINTF("%u ", cell.timeslot_offset);
+  }
+}
+
+int remove_all_links(linkaddr_t *peer_addr)
+{
+  printf("in remove_all_links\n");
+  uint8_t i = 0, index = 0;
   struct tsch_slotframe *sf =
     tsch_schedule_get_slotframe_by_handle(SF_SLOTFRAME_HANDLE);
   struct tsch_link *link;
+
+  uint16_t req_len;
+  sf_simple_cell_t cell_list[SF_SIMPLE_MAX_LINKS];
 
   assert(peer_addr != NULL && sf != NULL);
 
@@ -41,8 +96,44 @@ void remove_links(linkaddr_t *peer_addr)
       /* Non-zero value indicates a scheduled link */
       if(((linkaddr_cmp(&link->addr, peer_addr)) || (linkaddr_cmp(&link->real_addr, peer_addr))) && (link->link_options == LINK_OPTION_TX)) {
         /* This link is scheduled as a TX link to the specified neighbor */
-        tsch_schedule_remove_link(sf, link);
+        // tsch_schedule_remove_link(sf, link);
+        cell_list[index].timeslot_offset = i;
+        cell_list[index].channel_offset = link->channel_offset;
+        index++;
       }
     }
   }
+
+  if(index == 0 ) {
+    return -1;
+  }
+
+  memset(req_storage, 0, sizeof(req_storage));
+  if(sixp_pkt_set_num_cells(SIXP_PKT_TYPE_REQUEST,
+                            (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
+                            index,
+                            req_storage,
+                            sizeof(req_storage)) != 0 ||
+     sixp_pkt_set_cell_list(SIXP_PKT_TYPE_REQUEST,
+                            (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
+                            (const uint8_t *)cell_list,
+                            index * sizeof(sf_simple_cell_t),
+                            0,
+                            req_storage, sizeof(req_storage)) != 0) {
+    PRINTF("sf-simple: Build error on delete all request\n");
+    return -1;
+  }
+
+  req_len = 4 + index * sizeof(sf_simple_cell_t);
+  sixp_output(SIXP_PKT_TYPE_REQUEST, (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
+              SF_SIMPLE_SFID,
+              req_storage, req_len, peer_addr,
+              NULL, NULL, 0);
+
+  PRINTF("sf-simple: Send a 6P Delete Request for %d links to node %d with LinkList :",
+         index, peer_addr->u8[7]);
+  print_cell_list((const uint8_t *)cell_list, index * sizeof(sf_simple_cell_t));
+  PRINTF("\n");
+
+  return 0;
 }
