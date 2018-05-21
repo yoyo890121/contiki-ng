@@ -37,6 +37,7 @@
 
 #include "contiki.h"
 #include "orchestra.h"
+#include "sf-conf.h"
 
 static uint16_t slotframe_handle = 0;
 static uint16_t channel_offset = 0;
@@ -67,7 +68,7 @@ static void
 init(uint16_t sf_handle)
 {
   slotframe_handle = sf_handle;
-  channel_offset = slotframe_handle;
+  channel_offset = slotframe_handle+SF_CHANNEL_NUM-1;
   /* Default slotframe: for broadcast or unicast to neighbors we
    * do not have a link to */
   struct tsch_slotframe *sf_common = tsch_schedule_add_slotframe(slotframe_handle, ORCHESTRA_COMMON_SHARED_PERIOD);

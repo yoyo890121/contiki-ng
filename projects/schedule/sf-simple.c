@@ -485,12 +485,14 @@ sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links)
   /* Flag to prevent repeated slots */
   uint8_t slot_check = 1;
   uint16_t random_slot = 0;
+  uint16_t random_channel = 0;
 
   assert(peer_addr != NULL && sf != NULL);
 
   do {
     /* Randomly select a slot offset within SF_SLOTFRAME_LENGTH */
     random_slot = ((random_rand() & 0xFF)) % SF_SLOTFRAME_LENGTH;
+    random_channel = ((random_rand() & 0xFF)) % SF_CHANNEL_NUM;
 
     if(tsch_schedule_get_link_by_timeslot(sf, random_slot) == NULL) {
 
@@ -512,7 +514,7 @@ sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links)
       /* Random selection resulted in a free slot, add it to linklist */
       if(slot_check == 1) {
         cell_list[index].timeslot_offset = random_slot;
-        cell_list[index].channel_offset = slotframe_handle;
+        cell_list[index].channel_offset = slotframe_handle+random_channel;
 
         index++;
         slot_check++;
