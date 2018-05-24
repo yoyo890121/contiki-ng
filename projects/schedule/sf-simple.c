@@ -55,6 +55,7 @@
 
 PROCESS_NAME(sf_wait_trans_done_process);
 process_event_t sf_trans_done;
+PROCESS(sf_wait_for_retry_process, "Wait for retry process");
 
 typedef struct {
   uint16_t timeslot_offset;
@@ -472,7 +473,7 @@ response_input(sixp_pkt_rc_t rc,
 /*---------------------------------------------------------------------------*/
 /* Initiates a Sixtop Link addition
  */
-int
+int 
 sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links)
 {
   uint8_t i = 0, index = 0;
@@ -630,10 +631,60 @@ sf_simple_remove_links(linkaddr_t *peer_addr)
   return 0;
 }
 
+typedef struct {
+  sixp_pkt_cmd_t cmd;
+  const linkaddr_t *peer_addr;
+} process_data;
+
 static void
 timeout(sixp_pkt_cmd_t cmd, const linkaddr_t *peer_addr)
 {
   PRINTF("transaction timeout\n");
+  process_data data_to_process = {cmd, peer_addr};
+  process_start(&sf_wait_for_retry_process, &data_to_process);
+}
+
+#define TIMEOUT_RANDOM 3
+
+PROCESS_THREAD(sf_wait_for_retry_process, ev, data)
+{
+  static struct etimer et;
+  static sixp_pkt_cmd_t cmd;
+  static const linkaddr_t *peer_addr_c;
+  static linkaddr_t peer_addr; //const problem
+  uint8_t random_time = (((random_rand() & 0xFF)) % TIMEOUT_RANDOM)+1;
+
+  PROCESS_BEGIN();
+  
+  etimer_set(&et, CLOCK_SECOND*random_time);
+  cmd = ((process_data *)data)->cmd;
+  peer_addr_c = ((process_data *)data)->peer_addr;
+  peer_addr = *peer_addr_c;
+  printf("in sf_wait_for_retry_process cmd=%d node=%d\n", cmd, peer_addr.u8[7]);  
+
+  sixp_trans_t *trans = sixp_trans_find(&peer_addr);
+  if(trans != NULL) {
+    sixp_trans_state_t state;
+    state = sixp_trans_get_state(trans);
+    if (state == SIXP_TRANS_STATE_REQUEST_SENT || state == SIXP_TRANS_STATE_RESPONSE_SENT || state == SIXP_TRANS_STATE_CONFIRMATION_SENT) {
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+      PRINTF("do retry\n");
+      switch (cmd) {
+      case SIXP_PKT_CMD_ADD:
+        sf_simple_add_links(&peer_addr, 1);
+        break;
+      case SIXP_PKT_CMD_DELETE:
+        sf_simple_remove_links(&peer_addr);
+        break;
+      default:
+        /* unsupported request */
+        break;
+      }
+    }
+  }
+    
+  etimer_reset(&et);  
+  PROCESS_END();
 }
 
 static void
@@ -644,7 +695,7 @@ init(void)
 
 const sixtop_sf_t sf_simple_driver = {
   SF_SIMPLE_SFID,
-  CLOCK_SECOND,
+  CLOCK_SECOND*4,
   init,
   input,
   timeout
