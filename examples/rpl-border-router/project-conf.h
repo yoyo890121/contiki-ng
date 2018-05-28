@@ -31,7 +31,7 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
-#define TSCH_LOG_CONF_PER_SLOT                     1
+
 #define ORCHESTRA_CONF_RULES { &eb_per_time_source, &unicast_per_neighbor_new, &empty_data, &default_common }
 #define TSCH_CONF_WITH_SIXTOP 1
 

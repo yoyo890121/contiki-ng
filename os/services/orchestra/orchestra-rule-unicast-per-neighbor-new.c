@@ -76,7 +76,7 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
   if(linkaddr != NULL && !linkaddr_cmp(linkaddr, &linkaddr_null)) {
     if((orchestra_parent_knows_us || !ORCHESTRA_UNICAST_SENDER_BASED)
        && linkaddr_cmp(&orchestra_parent_linkaddr, linkaddr)) {
-      printf("6top neighbor_has_uc_link 1.1\n");
+      // printf("6top neighbor_has_uc_link 1.1\n");
       return 1;
     }
     // if(nbr_table_get_from_lladdr(ds6_neighbors, (linkaddr_t *)linkaddr) != NULL) {
@@ -183,10 +183,10 @@ select_packet(uint16_t *slotframe, uint16_t *timeslot)
     if(timeslot != NULL) {
       *timeslot = get_node_timeslot(dest);
     }
-    printf("new uc select_packet 1, %d %d\n", *slotframe, *timeslot);
+    // printf("new uc select_packet 1, %d %d\n", *slotframe, *timeslot);
     return 1;
   }
-  printf("new uc select_packet 0\n");
+  // printf("new uc select_packet 0\n");
   return 0;
 }
 /*---------------------------------------------------------------------------*/

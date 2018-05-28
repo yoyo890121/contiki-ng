@@ -81,10 +81,10 @@ select_packet(uint16_t *slotframe, uint16_t *timeslot)
     if(slotframe != NULL) {
       *slotframe = slotframe_handle;
     }
-    printf("data select_packet 1, %d\n", *slotframe);
+    // printf("data select_packet 1, %d\n", *slotframe);
     return 1;
   }
-  printf("data select_packet 0\n");
+  // printf("data select_packet 0\n");
   return 0;
 }
 /*---------------------------------------------------------------------------*/
