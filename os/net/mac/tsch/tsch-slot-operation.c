@@ -52,6 +52,9 @@
 #include "net/queuebuf.h"
 #include "net/mac/framer/framer-802154.h"
 #include "net/mac/tsch/tsch.h"
+#include "sixtop.h"
+#include "sf-simple.h"
+#include "sf-conf.h"
 #if CONTIKI_TARGET_COOJA
 #include "lib/simEnvChange.h"
 #include "sys/cooja_mt.h"
@@ -940,6 +943,14 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
       }
       is_active_slot = current_packet != NULL || (current_link->link_options & LINK_OPTION_RX);
       if(is_active_slot) {
+        extern uint8_t numCellsUsed;
+        struct tsch_neighbor *parent = tsch_queue_get_time_source();
+
+        if(current_link != NULL && parent != NULL) {
+          if(linkaddr_cmp(&current_link->real_addr, &parent->addr)) {
+            numCellsUsed++;
+          }
+        }
         /* Hop channel */
         current_channel = tsch_calculate_channel(&tsch_current_asn, current_link->channel_offset);
         NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, current_channel);
@@ -995,6 +1006,45 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
 
         /* Get next active link */
         current_link = tsch_schedule_get_next_active_link(&tsch_current_asn, &timeslot_diff, &backup_link);
+        extern uint8_t numCellsPassed;
+        struct tsch_neighbor *parent = tsch_queue_get_time_source();
+
+        if(current_link != NULL && parent != NULL) {
+          if(linkaddr_cmp(&current_link->real_addr, &parent->addr)) {
+            numCellsPassed++;
+          }
+        }
+
+        if(numCellsPassed >= NUMCELLS_MAX) {
+          //calc links_count
+          struct tsch_slotframe *sf =
+              tsch_schedule_get_slotframe_by_handle(SF_SLOTFRAME_HANDLE);
+          struct tsch_link *l;
+          uint8_t links_count = 0;
+          for (uint8_t i = 0; i < SF_SLOTFRAME_LENGTH; i++) {
+            l = tsch_schedule_get_link_by_timeslot(sf, i);
+            if (l) {
+              /* Non-zero value indicates a scheduled link */
+              if (((linkaddr_cmp(&l->addr, &parent->addr)) || (linkaddr_cmp(&l->real_addr, &parent->addr))) && (l->link_options == LINK_OPTION_TX)) {
+                links_count++;
+              }
+            }
+          }
+
+          if(numCellsUsed > NUMCELLS_MAX*0.5) {
+            printf("dynamic add: ");  
+            sf_simple_add_links(&parent->addr, 1);
+          }
+          if((numCellsUsed < NUMCELLS_MAX*0.1) && links_count > 1) {
+            printf("dynamic delete: ");
+            sf_simple_remove_links(&parent->addr);
+          }
+          // printf("links_count=%d ", links_count);
+          // printf("numCellsPassed=%d numCellsUsed=%d\n", numCellsPassed, numCellsUsed);
+          numCellsPassed = 0;
+          numCellsUsed = 0;
+        }
+
         if(current_link == NULL) {
           /* There is no next link. Fall back to default
            * behavior: wake up at the next slot. */

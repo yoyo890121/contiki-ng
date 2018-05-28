@@ -33,7 +33,7 @@ int remove_all_links(linkaddr_t *peer_addr);
 void
 sf_simple_switching_parent_callback(linkaddr_t *old_addr, linkaddr_t *new_addr)
 {
-    printf("in sf_simple_switching_parent_callback\n");
+  printf("in sf_simple_switching_parent_callback\n");
   struct tsch_neighbor *n = NULL;
   n = tsch_queue_get_nbr(&tsch_broadcast_address);
   uint8_t dedicated_links_num =  n->dedicated_tx_links_count-1; //-1 for EB slotframe Tx
@@ -48,7 +48,7 @@ sf_simple_switching_parent_callback(linkaddr_t *old_addr, linkaddr_t *new_addr)
 
 PROCESS_THREAD(sf_wait_trans_done_process, ev, data)
 {
-  static linkaddr_t *old_addr;
+  static linkaddr_t *old_addr = NULL;
   PROCESS_BEGIN();
   old_addr = data;
   PROCESS_WAIT_EVENT_UNTIL(ev == sf_trans_done);

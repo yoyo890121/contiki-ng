@@ -46,8 +46,13 @@
 int sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links);
 int sf_simple_remove_links(linkaddr_t *peer_addr);
 
-#define SF_SIMPLE_MAX_LINKS  3
+#define SF_SIMPLE_MAX_LINKS  5
 #define SF_SIMPLE_SFID       0xf0
+#define NUMCELLS_MAX   20
+
 extern const sixtop_sf_t sf_simple_driver;
+
+uint8_t numCellsPassed;
+uint8_t numCellsUsed;
 
 #endif /* !_SIXTOP_SF_SIMPLE_H_ */

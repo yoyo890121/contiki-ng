@@ -644,13 +644,13 @@ timeout(sixp_pkt_cmd_t cmd, const linkaddr_t *peer_addr)
   process_start(&sf_wait_for_retry_process, &data_to_process);
 }
 
-#define TIMEOUT_RANDOM 3
+#define TIMEOUT_RANDOM 10
 
 PROCESS_THREAD(sf_wait_for_retry_process, ev, data)
 {
   static struct etimer et;
-  static sixp_pkt_cmd_t cmd;
-  static const linkaddr_t *peer_addr_c;
+  static sixp_pkt_cmd_t cmd = 0x00;
+  static const linkaddr_t *peer_addr_c = NULL;
   static linkaddr_t peer_addr; //const problem
   uint8_t random_time = (((random_rand() & 0xFF)) % TIMEOUT_RANDOM)+1;
 
@@ -691,11 +691,13 @@ static void
 init(void)
 {
   sf_trans_done = process_alloc_event();
+  numCellsPassed = 0;
+  numCellsUsed = 0;
 }
 
 const sixtop_sf_t sf_simple_driver = {
   SF_SIMPLE_SFID,
-  CLOCK_SECOND*4,
+  CLOCK_SECOND*5,
   init,
   input,
   timeout
