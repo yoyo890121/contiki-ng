@@ -68,7 +68,7 @@ PROCESS_THREAD(node_process, ev, data)
   while(1) {
     PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
     etimer_reset(&etaa);
-    tsch_schedule_print();
+    // tsch_schedule_print();
   }
 
   PROCESS_END();

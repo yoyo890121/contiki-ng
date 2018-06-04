@@ -132,12 +132,22 @@ PROCESS_THREAD(node_process, ev, data)
   static struct etimer etaa;
   PROCESS_BEGIN();
 
-  etimer_set(&etaa, CLOCK_SECOND * 30);
-  while(1) {
-    PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
-    etimer_reset(&etaa);
-    tsch_schedule_print();
+  etimer_set(&etaa, CLOCK_SECOND * 3600);
+  PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
+  etimer_reset(&etaa);
+  #if CONTIKI_TARGET_COOJA
+  #include "node-id.h"
+  extern uint8_t event_threshold;
+  if((node_id == 11) || (node_id) == 3) {
+    event_threshold = 1;
   }
+#endif /* CONTIKI_TARGET_COOJA */
+
+  // while(1) {
+  //   PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
+  //   etimer_reset(&etaa);
+  //   tsch_schedule_print();
+  // }
 
   PROCESS_END();
 }
