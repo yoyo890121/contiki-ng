@@ -50,10 +50,11 @@
 #include "sf-simple.h"
 #include "sf-conf.h"
 
-#define DEBUG DEBUG_PRINT
+#define DEBUG DEBUG_NONE
 #include "net/net-debug.h"
 
 PROCESS_NAME(sf_wait_trans_done_process);
+PROCESS_NAME(sf_housekeeping_process);
 process_event_t sf_trans_done;
 PROCESS(sf_wait_for_retry_process, "Wait for retry process");
 
@@ -153,7 +154,9 @@ add_links_to_schedule(const linkaddr_t *peer_addr, uint8_t link_option,
     link = tsch_schedule_add_link(slotframe,
                            link_option, LINK_TYPE_NORMAL, &tsch_broadcast_address,
                            cell.timeslot_offset, cell.channel_offset);
-    link->real_addr = *peer_addr;
+    if(link != NULL) {
+      link->real_addr = *peer_addr;
+    }
     break;
   }
   process_post(&sf_wait_trans_done_process, sf_trans_done, NULL);
@@ -644,7 +647,6 @@ timeout(sixp_pkt_cmd_t cmd, const linkaddr_t *peer_addr)
   process_start(&sf_wait_for_retry_process, &data_to_process);
 }
 
-#define TIMEOUT_RANDOM 10
 
 PROCESS_THREAD(sf_wait_for_retry_process, ev, data)
 {
@@ -652,7 +654,7 @@ PROCESS_THREAD(sf_wait_for_retry_process, ev, data)
   static sixp_pkt_cmd_t cmd = 0x00;
   static const linkaddr_t *peer_addr_c = NULL;
   static linkaddr_t peer_addr; //const problem
-  uint8_t random_time = (((random_rand() & 0xFF)) % TIMEOUT_RANDOM)+1;
+  uint8_t random_time = (((random_rand() & 0xFF)) % TIMEOUT_WAIT_FOR_RETRY_RANDOM)+3;
 
   PROCESS_BEGIN();
   
@@ -668,13 +670,15 @@ PROCESS_THREAD(sf_wait_for_retry_process, ev, data)
     state = sixp_trans_get_state(trans);
     if (state == SIXP_TRANS_STATE_REQUEST_SENT || state == SIXP_TRANS_STATE_RESPONSE_SENT || state == SIXP_TRANS_STATE_CONFIRMATION_SENT) {
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-      PRINTF("do retry\n");
+      
       switch (cmd) {
       case SIXP_PKT_CMD_ADD:
         sf_simple_add_links(&peer_addr, 1);
+        PRINTF("do retry\n");
         break;
       case SIXP_PKT_CMD_DELETE:
-        sf_simple_remove_links(&peer_addr);
+        // sf_simple_remove_links(&peer_addr);
+        PRINTF("DELETE do not retry\n");
         break;
       default:
         /* unsupported request */
@@ -691,13 +695,16 @@ static void
 init(void)
 {
   sf_trans_done = process_alloc_event();
+  process_start(&sf_housekeeping_process, NULL);
+  #if SF_ENABLE_DYNAMIC
   numCellsPassed = 0;
   numCellsUsed = 0;
+  #endif /* SF_ENABLE_DYNAMIC */
 }
 
 const sixtop_sf_t sf_simple_driver = {
   SF_SIMPLE_SFID,
-  CLOCK_SECOND*5,
+  CLOCK_SECOND*10,
   init,
   input,
   timeout

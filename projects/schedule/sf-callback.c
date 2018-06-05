@@ -10,12 +10,13 @@
 #include "sf-simple.h"
 #include "sf-conf.h"
 
-#define DEBUG DEBUG_PRINT
+#define DEBUG DEBUG_NONE
 #include "net/net-debug.h"
 
 extern process_event_t sf_trans_done;
 
 PROCESS(sf_wait_trans_done_process, "sf wait trans done process");
+PROCESS(sf_housekeeping_process, "sf housekeeping process");
 
 typedef struct {
   uint16_t timeslot_offset;
@@ -29,6 +30,7 @@ static uint8_t req_storage[4 + SF_SIMPLE_MAX_LINKS * 4];
 static void read_cell(const uint8_t *buf, sf_simple_cell_t *cell);
 static void print_cell_list(const uint8_t *cell_list, uint16_t cell_list_len);
 int remove_all_links(linkaddr_t *peer_addr);
+static void remove_all_unused_links();
 
 void
 sf_simple_switching_parent_callback(linkaddr_t *old_addr, linkaddr_t *new_addr)
@@ -49,9 +51,13 @@ sf_simple_switching_parent_callback(linkaddr_t *old_addr, linkaddr_t *new_addr)
 PROCESS_THREAD(sf_wait_trans_done_process, ev, data)
 {
   static linkaddr_t *old_addr = NULL;
+  static struct etimer et;
+
   PROCESS_BEGIN();
+  etimer_set(&et, CLOCK_SECOND * 1);
   old_addr = data;
   PROCESS_WAIT_EVENT_UNTIL(ev == sf_trans_done);
+  PROCESS_YIELD_UNTIL(etimer_expired(&et));
   printf("sf_trans_done\n");
   remove_all_links(old_addr);
   PROCESS_END();
@@ -82,7 +88,7 @@ int remove_all_links(linkaddr_t *peer_addr)
   uint8_t i = 0, index = 0;
   struct tsch_slotframe *sf =
     tsch_schedule_get_slotframe_by_handle(SF_SLOTFRAME_HANDLE);
-  struct tsch_link *link;
+  struct tsch_link *link = NULL;
 
   uint16_t req_len;
   sf_simple_cell_t cell_list[SF_SIMPLE_MAX_LINKS];
@@ -136,4 +142,73 @@ int remove_all_links(linkaddr_t *peer_addr)
   PRINTF("\n");
 
   return 0;
+}
+
+PROCESS_THREAD(sf_housekeeping_process, ev, data)
+{
+  static struct etimer et;
+  PROCESS_BEGIN();
+
+  etimer_set(&et, CLOCK_SECOND * HOUSEKEEPING_PERIOD);
+  while(1) {
+    PROCESS_YIELD_UNTIL(etimer_expired(&et));
+    etimer_reset(&et);
+    remove_all_unused_links();
+
+    struct tsch_neighbor *parent = tsch_queue_get_time_source();
+    struct tsch_slotframe *sf =
+              tsch_schedule_get_slotframe_by_handle(SF_SLOTFRAME_HANDLE);
+    struct tsch_link *l = NULL;
+    uint8_t links_count = 0;
+    if(parent != NULL) {
+      for (uint8_t i = 0; i < SF_SLOTFRAME_LENGTH; i++) {
+        l = tsch_schedule_get_link_by_timeslot(sf, i);
+        if (l) {
+          /* Non-zero value indicates a scheduled link */
+          if (((linkaddr_cmp(&l->addr, &parent->addr)) || (linkaddr_cmp(&l->real_addr, &parent->addr))) && (l->link_options == LINK_OPTION_TX)) {
+            links_count++;
+          }
+        }
+      }
+      printf("links_count=%d\n", links_count);
+      if(links_count == 0) {
+        sf_simple_add_links(&parent->addr, 1);
+        printf("links_count == 0 add a link\n");
+      }
+    }
+  }
+
+  PROCESS_END();
+}
+
+static void
+remove_all_unused_links()
+{
+  struct tsch_neighbor *parent = tsch_queue_get_time_source();
+  struct tsch_slotframe *sf =
+    tsch_schedule_get_slotframe_by_handle(SF_SLOTFRAME_HANDLE);
+  struct tsch_link *link = NULL;
+
+  if(parent != NULL) {
+    for(uint8_t i = 0; i < SF_SLOTFRAME_LENGTH; i++) {
+      link = tsch_schedule_get_link_by_timeslot(sf, i);
+  
+      if(link) {
+        /* Non-zero value indicates a scheduled link */
+        if(!(linkaddr_cmp(&link->real_addr, &parent->addr)) && (link->link_options == LINK_OPTION_TX)) {
+          tsch_schedule_remove_link(sf, link);
+          printf("remove_not_parent_tx_link\n");
+        }  
+        rpl_nbr_t* neighbor = rpl_neighbor_get_from_lladdr((uip_lladdr_t*)(&link->real_addr));
+        if(neighbor == NULL) {
+          tsch_schedule_remove_link(sf, link);
+          printf("remove_not_neighbor_link\n"); //seem does not work
+        } else {
+          if(!rpl_neighbor_is_reachable(neighbor)) {
+            printf("remove_not_reachable_neighbor_link\n");
+          }
+        }
+      }
+    }
+  }
 }

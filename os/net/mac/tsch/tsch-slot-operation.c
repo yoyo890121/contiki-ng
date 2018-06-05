@@ -52,9 +52,11 @@
 #include "net/queuebuf.h"
 #include "net/mac/framer/framer-802154.h"
 #include "net/mac/tsch/tsch.h"
+#if SF_ENABLE_DYNAMIC
 #include "sixtop.h"
 #include "sf-simple.h"
 #include "sf-conf.h"
+#endif /* SF_ENABLE_DYNAMIC */
 #if CONTIKI_TARGET_COOJA
 #include "lib/simEnvChange.h"
 #include "sys/cooja_mt.h"
@@ -943,6 +945,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
       }
       is_active_slot = current_packet != NULL || (current_link->link_options & LINK_OPTION_RX);
       if(is_active_slot) {
+  #if SF_ENABLE_DYNAMIC
         extern uint8_t numCellsUsed;
         struct tsch_neighbor *parent = tsch_queue_get_time_source();
 
@@ -951,6 +954,8 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
             numCellsUsed++;
           }
         }
+  #endif /* SF_ENABLE_DYNAMIC */
+
         /* Hop channel */
         current_channel = tsch_calculate_channel(&tsch_current_asn, current_link->channel_offset);
         NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, current_channel);
@@ -1006,6 +1011,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
 
         /* Get next active link */
         current_link = tsch_schedule_get_next_active_link(&tsch_current_asn, &timeslot_diff, &backup_link);
+  #if SF_ENABLE_DYNAMIC
         extern uint8_t numCellsPassed;
         struct tsch_neighbor *parent = tsch_queue_get_time_source();
 
@@ -1031,12 +1037,16 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
             }
           }
 
-          if(numCellsUsed > NUMCELLS_MAX*0.5) {
+          if((numCellsUsed > NUMCELLS_MAX * LIM_NUMCELLSUSED_HIGH) && links_count <= 5) {
             printf("dynamic add: ");  
+            printf("links_count=%d ", links_count);
+            printf("numCellsPassed=%d numCellsUsed=%d\n", numCellsPassed, numCellsUsed);
             sf_simple_add_links(&parent->addr, 1);
           }
-          if((numCellsUsed < NUMCELLS_MAX*0.1) && links_count > 1) {
+          if((numCellsUsed < NUMCELLS_MAX * LIM_NUMCELLSUSED_LOW) && links_count > 1) {
             printf("dynamic delete: ");
+            printf("links_count=%d ", links_count);
+            printf("numCellsPassed=%d numCellsUsed=%d\n", numCellsPassed, numCellsUsed);
             sf_simple_remove_links(&parent->addr);
           }
           // printf("links_count=%d ", links_count);
@@ -1044,6 +1054,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
           numCellsPassed = 0;
           numCellsUsed = 0;
         }
+  #endif /* SF_ENABLE_DYNAMIC */
 
         if(current_link == NULL) {
           /* There is no next link. Fall back to default
