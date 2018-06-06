@@ -76,15 +76,31 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
   if(linkaddr != NULL && !linkaddr_cmp(linkaddr, &linkaddr_null)) {
     if((orchestra_parent_knows_us || !ORCHESTRA_UNICAST_SENDER_BASED)
        && linkaddr_cmp(&orchestra_parent_linkaddr, linkaddr)) {
-      // printf("6top neighbor_has_uc_link 1.1\n");
+      // printf("new uc neighbor_has_uc_link 1.1\n");
       return 1;
     }
-    // if(nbr_table_get_from_lladdr(ds6_neighbors, (linkaddr_t *)linkaddr) != NULL) {
-    //   // printf("neighbor_has_uc_link 1.2\n");
-    //   return 1;
-    // }
+    if(nbr_table_get_from_lladdr(ds6_neighbors, (linkaddr_t *)linkaddr) != NULL) {
+      // printf("new uc neighbor_has_uc_link 1.2\n");
+      return 1;
+    }
   }
-  // printf("neighbor_has_uc_link 0\n");
+  // printf("new uc neighbor_has_uc_link 0\n");
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+static int
+is_time_source(const linkaddr_t *linkaddr)
+{
+  // struct tsch_neighbor *n = tsch_queue_get_time_source();
+  // if(n != NULL) {
+     if(linkaddr != NULL && !linkaddr_cmp(linkaddr, &linkaddr_null)) {
+      if(linkaddr_cmp(&orchestra_parent_linkaddr, linkaddr)) {
+        // printf("is_for_timesource 1\n");
+        return 1;
+      }  
+    }  
+  // }  
+  // printf("is_for_timesource 0\n");
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -156,7 +172,7 @@ remove_uc_link(const linkaddr_t *linkaddr)
 static void
 child_added(const linkaddr_t *linkaddr)
 {
-  printf("child_added call\n");
+  printf("child_added call ");
   LOG_PRINT_LLADDR((linkaddr_t*)linkaddr);
   LOG_PRINT_("\n");
   add_uc_link(linkaddr);
@@ -173,20 +189,19 @@ select_packet(uint16_t *slotframe, uint16_t *timeslot)
 {
   /* Select data packets we have a unicast link to */
   const linkaddr_t *dest = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
-  if(packetbuf_attr(PACKETBUF_ATTR_FRAME_TYPE) == FRAME802154_DATAFRAME
-  && neighbor_has_uc_link(dest) 
-  && packetbuf_attr(PACKETBUF_ATTR_MAC_METADATA) == 1
-   ) {
-    if(slotframe != NULL) {
+  if(packetbuf_attr(PACKETBUF_ATTR_FRAME_TYPE) == FRAME802154_DATAFRAME && neighbor_has_uc_link(dest)) {
+    if((packetbuf_attr(PACKETBUF_ATTR_MAC_METADATA) == 1) || ((packetbuf_attr(PACKETBUF_ATTR_MAC_METADATA) != 1) && (!is_time_source(dest))) ) {
+      if(slotframe != NULL) {
       *slotframe = slotframe_handle;
+      }
+      if(timeslot != NULL) {
+        *timeslot = get_node_timeslot(dest);
+      }
+      printf("new uc select_packet 1, %d %d\n", *slotframe, *timeslot);
+      return 1;
     }
-    if(timeslot != NULL) {
-      *timeslot = get_node_timeslot(dest);
-    }
-    // printf("new uc select_packet 1, %d %d\n", *slotframe, *timeslot);
-    return 1;
   }
-  // printf("new uc select_packet 0\n");
+  printf("new uc select_packet 0\n");
   return 0;
 }
 /*---------------------------------------------------------------------------*/

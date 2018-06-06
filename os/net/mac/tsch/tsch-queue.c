@@ -419,24 +419,23 @@ tsch_queue_get_packet_for_nbr(const struct tsch_neighbor *n, struct tsch_link *l
       if(get_index != -1 &&
           !(is_shared_link && !tsch_queue_backoff_expired(n))) {    /* If this is a shared link,
                                                                     make sure the backoff has expired */
-#if TSCH_WITH_LINK_SELECTOR 
+#if TSCH_WITH_LINK_SELECTOR
         int packet_attr_type = queuebuf_attr(n->tx_array[get_index]->qb, PACKETBUF_ATTR_FRAME_TYPE);
         int packet_attr_metadata = queuebuf_attr(n->tx_array[get_index]->qb, PACKETBUF_ATTR_MAC_METADATA);
         int packet_attr_slotframe = queuebuf_attr(n->tx_array[get_index]->qb, PACKETBUF_ATTR_TSCH_SLOTFRAME);
         int packet_attr_timeslot = queuebuf_attr(n->tx_array[get_index]->qb, PACKETBUF_ATTR_TSCH_TIMESLOT);
         
         // printf("link->slotframe_handle=%d\n", link->slotframe_handle);
-        if(packet_attr_type == FRAME802154_DATAFRAME && packet_attr_metadata!=1) {
-          if(n->is_time_source == 0) {
-            // printf("data packet not time source!\n");
-            packet_attr_slotframe = 3;
-            packet_attr_timeslot = 0xffff;            
+        if(packet_attr_type == FRAME802154_DATAFRAME && packet_attr_metadata != 1) {
+          if(n->is_time_source == 0 && packet_attr_slotframe == 2) {
+            // printf("data packet not time source! ");
+            // printf("packet_attr_slotframe=%d\n", packet_attr_slotframe);
+            // packet_attr_slotframe = 3;
+            // packet_attr_timeslot = 0xffff;
           }
         }
-        if(packet_attr_type == FRAME802154_DATAFRAME && packet_attr_metadata==1) {
+        if(packet_attr_type == FRAME802154_DATAFRAME && packet_attr_metadata == 1) {
           // printf("packet_attr_type=DATA & metadata\n");
-          // packet_attr_slotframe = 0xffff;
-          // packet_attr_timeslot = 0xffff;
         }         
 
         if(packet_attr_slotframe != 0xffff && packet_attr_slotframe != link->slotframe_handle) {
@@ -448,7 +447,7 @@ tsch_queue_get_packet_for_nbr(const struct tsch_neighbor *n, struct tsch_link *l
           // printf("packet_attr_timeslot NULL ");
           // printf("packet_attr_timeslot=%d link->timeslot=%d\n", packet_attr_timeslot, link->timeslot);
           return NULL;
-        }  
+        }
 #endif
         return n->tx_array[get_index];
       }

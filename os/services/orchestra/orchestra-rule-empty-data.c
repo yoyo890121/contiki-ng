@@ -55,36 +55,39 @@ static uint16_t channel_offset = 0;
 static struct tsch_slotframe *sf_data;
 
 /*---------------------------------------------------------------------------*/
-// static int
-// neighbor_has_uc_link(const linkaddr_t *linkaddr)
-// {
-//   n = tsch_queue_get_time_source();
-//   if(linkaddr != NULL && !linkaddr_cmp(linkaddr, &linkaddr_null)) {
-//     if(linkaddr_cmp(&n->addr, linkaddr)) {
-//       printf("neighbor_has_uc_link 1.1\n");
-//       return 1;
-//     }  
-//   }
-//   printf("neighbor_has_uc_link 0\n");
-//   return 0;
-// }
+static int
+neighbor_has_uc_link(const linkaddr_t *linkaddr)
+{
+  // struct tsch_neighbor *n = tsch_queue_get_time_source();
+  // if(n != NULL) {
+     if(linkaddr != NULL && !linkaddr_cmp(linkaddr, &linkaddr_null)) {
+      if(linkaddr_cmp(&orchestra_parent_linkaddr, linkaddr)) {
+        // printf("data neighbor_has_uc_link 1.1\n");
+        return 1;
+      }  
+    }  
+  // }
+  
+  // printf("data neighbor_has_uc_link 0\n");
+  return 0;
+}
 /*---------------------------------------------------------------------------*/
 static int
 select_packet(uint16_t *slotframe, uint16_t *timeslot)
 {
   /* Select data packets we have a unicast link to */
-  // const linkaddr_t *dest = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
+  const linkaddr_t *dest = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
   if(packetbuf_attr(PACKETBUF_ATTR_FRAME_TYPE) == FRAME802154_DATAFRAME
   && packetbuf_attr(PACKETBUF_ATTR_MAC_METADATA) != 1 
-  // && neighbor_has_uc_link(dest)
+  && neighbor_has_uc_link(dest)
   ) {
     if(slotframe != NULL) {
       *slotframe = slotframe_handle;
     }
-    // printf("data select_packet 1, %d\n", *slotframe);
+    printf("data select_packet 1, %d\n", *slotframe);
     return 1;
   }
-  // printf("data select_packet 0\n");
+  printf("data select_packet 0\n");
   return 0;
 }
 /*---------------------------------------------------------------------------*/
