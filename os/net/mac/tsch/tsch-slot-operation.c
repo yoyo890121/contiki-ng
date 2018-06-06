@@ -52,11 +52,11 @@
 #include "net/queuebuf.h"
 #include "net/mac/framer/framer-802154.h"
 #include "net/mac/tsch/tsch.h"
-#if SF_ENABLE_DYNAMIC
+
+#include "sf-conf.h"
 #include "sixtop.h"
 #include "sf-simple.h"
-#include "sf-conf.h"
-#endif /* SF_ENABLE_DYNAMIC */
+
 #if CONTIKI_TARGET_COOJA
 #include "lib/simEnvChange.h"
 #include "sys/cooja_mt.h"
