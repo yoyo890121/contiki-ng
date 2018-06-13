@@ -122,7 +122,7 @@
 #endif /* LOG_CONF_LEVEL_NULLNET */
 
 #ifndef LOG_CONF_LEVEL_MAC
-#define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_DBG
+#define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_ERR
 #endif /* LOG_CONF_LEVEL_MAC */
 
 #ifndef LOG_CONF_LEVEL_FRAMER
@@ -130,11 +130,11 @@
 #endif /* LOG_CONF_LEVEL_FRAMER */
 
 #ifndef LOG_CONF_LEVEL_6TOP
-#define LOG_CONF_LEVEL_6TOP                        LOG_LEVEL_DBG
+#define LOG_CONF_LEVEL_6TOP                        LOG_LEVEL_ERR
 #endif /* LOG_CONF_LEVEL_6TOP */
 
 #ifndef LOG_CONF_LEVEL_COAP
-#define LOG_CONF_LEVEL_COAP                        LOG_LEVEL_INFO
+#define LOG_CONF_LEVEL_COAP                        LOG_LEVEL_ERR
 #endif /* LOG_CONF_LEVEL_COAP */
 
 #ifndef LOG_CONF_LEVEL_LWM2M

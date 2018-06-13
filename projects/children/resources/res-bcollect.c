@@ -12,7 +12,7 @@
 #include "rpl.h"
 #include "link-stats.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -43,7 +43,7 @@ PERIODIC_RESOURCE(res_bcollect,
 static uint32_t event_counter = 0;
 
 /* inter-packet time we generate a packet to send to observer */
-static uint8_t event_threshold = 20;
+uint8_t event_threshold = 20;
 
 /* record last change event threshold's event_counter */
 static uint32_t event_threshold_last_change = 0;

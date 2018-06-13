@@ -112,14 +112,15 @@ PROCESS_THREAD(print_schedule, ev, data)
   static struct etimer etaa;
   PROCESS_BEGIN();
 
-  etimer_set(&etaa, CLOCK_SECOND * 30);
+  etimer_set(&etaa, CLOCK_SECOND * 60);
   while(1) {
     PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
     etimer_reset(&etaa);
-    struct tsch_neighbor *n = NULL;
-    n = tsch_queue_get_nbr(&tsch_broadcast_address);
-    printf("dedicated_tx_links_count=%d\n", n->dedicated_tx_links_count-1); //-1 for EB slotframe Tx
-    tsch_schedule_print();
+    // struct tsch_neighbor *n = NULL;
+    // n = tsch_queue_get_nbr(&tsch_broadcast_address);
+    // printf("dedicated_tx_links_count=%d ", n->dedicated_tx_links_count-1); //-1 for EB slotframe Tx
+    // printf("numCellsPassed=%d numCellsUsed=%d\n", numCellsPassed, numCellsUsed);
+    // tsch_schedule_print();
   }
 
   PROCESS_END();
@@ -127,34 +128,45 @@ PROCESS_THREAD(print_schedule, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(node_process, ev, data)
 {
-  static int added_num_of_links = 0;
+  // static int added_num_of_links = 0;
   static struct etimer et;
-  struct tsch_neighbor *n;
+  // struct tsch_neighbor *n;
 
   PROCESS_BEGIN();
 
   sixtop_add_sf(&sf_simple_driver);
-
-  etimer_set(&et, CLOCK_SECOND * 30);
-  while(1) {
-    PROCESS_YIELD_UNTIL(etimer_expired(&et));
-    etimer_reset(&et);
-
-    /* Get time-source neighbor */
-    n = tsch_queue_get_time_source();
-
-    if ( (added_num_of_links == 1) || (added_num_of_links == 2) || (added_num_of_links == 3))
-    {
-      printf("App : Add a link\n");
-      sf_simple_add_links(&n->addr, 1);
-    }
-    else if (added_num_of_links == 5)
-    {
-      printf("App : Delete a link\n");
-      sf_simple_remove_links(&n->addr);
-    }
-    added_num_of_links++;
+  etimer_set(&et, CLOCK_SECOND * 3600);
+  PROCESS_YIELD_UNTIL(etimer_expired(&et));
+  etimer_reset(&et);
+#if CONTIKI_TARGET_COOJA
+#include "node-id.h"
+  extern uint8_t event_threshold;
+  if((node_id == 11) || (node_id) == 3) {
+    event_threshold = 1;
+    printf("set event_threshold = 1\n");
   }
+#endif /* CONTIKI_TARGET_COOJA */
+
+  // etimer_set(&et, CLOCK_SECOND * 60);
+  // while(1) {
+  //   PROCESS_YIELD_UNTIL(etimer_expired(&et));
+  //   etimer_reset(&et);
+
+  //   /* Get time-source neighbor */
+  //   n = tsch_queue_get_time_source();
+
+  //   if ( (added_num_of_links == 2) || (added_num_of_links == 3))
+  //   {
+  //     printf("App : Add a link\n");
+  //     sf_simple_add_links(&n->addr, 1);
+  //   }
+  //   else if (added_num_of_links == 4)
+  //   {
+  //     printf("App : Delete a link\n");
+  //     sf_simple_remove_links(&n->addr);
+  //   }
+  //   added_num_of_links++;
+  // }
 
   PROCESS_END();
 }

@@ -197,11 +197,11 @@ select_packet(uint16_t *slotframe, uint16_t *timeslot)
       if(timeslot != NULL) {
         *timeslot = get_node_timeslot(dest);
       }
-      printf("new uc select_packet 1, %d %d\n", *slotframe, *timeslot);
+      // printf("new uc select_packet 1, %d %d\n", *slotframe, *timeslot);
       return 1;
     }
   }
-  printf("new uc select_packet 0\n");
+  // printf("new uc select_packet 0\n");
   return 0;
 }
 /*---------------------------------------------------------------------------*/
