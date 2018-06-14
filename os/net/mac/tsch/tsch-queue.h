@@ -99,5 +99,9 @@ void tsch_queue_update_all_backoff_windows(const linkaddr_t *dest_addr);
 /* Initialize TSCH queue module */
 void tsch_queue_init(void);
 
+/* White resorting ringbuf method 2, using swap packet in ringbuf */
+void tsch_queue_resorting_ringbuf_priority(struct tsch_neighbor *n,struct tsch_packet *p);
+void pkt_priority_sorting(struct tsch_neighbor *n,struct tsch_packet *p);
+
 #endif /* __TSCH_QUEUE_H__ */
 /** @} */

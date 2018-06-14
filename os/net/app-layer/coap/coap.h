@@ -299,6 +299,9 @@ int coap_set_header_size1(coap_message_t *message, uint32_t size);
 int coap_get_payload(coap_message_t *message, const uint8_t **payload);
 int coap_set_payload(coap_message_t *message, const void *payload, size_t length);
 
+//Add function to set packet priority by setting traffic class
+void coap_set_uip_traffic_class(uint8_t priority);
+
 #endif /* COAP_H_ */
 /** @} */
 /** @} */

@@ -70,6 +70,12 @@ MEMB(packet_memb, struct tsch_packet, QUEUEBUF_NUM);
 MEMB(neighbor_memb, struct tsch_neighbor, TSCH_QUEUE_MAX_NEIGHBOR_QUEUES);
 LIST(neighbor_list);
 
+/* Testing for QoS swap function.*/
+static int8_t data_tcflow;
+
+#define DEBUG DEBUG_PRINT
+#include "net/net-debug.h"
+
 /* Broadcast and EB virtual neighbors */
 struct tsch_neighbor *n_broadcast;
 struct tsch_neighbor *n_eb;
@@ -228,6 +234,9 @@ tsch_queue_remove_nbr(struct tsch_neighbor *n)
   }
 }
 /*---------------------------------------------------------------------------*/
+/* direct access into the buffer */
+#define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
+
 /* Add packet to neighbor queue. Use same lockfree implementation as ringbuf.c (put is atomic) */
 struct tsch_packet *
 tsch_queue_add_packet(const linkaddr_t *addr, uint8_t max_transmissions,
@@ -236,6 +245,8 @@ tsch_queue_add_packet(const linkaddr_t *addr, uint8_t max_transmissions,
   struct tsch_neighbor *n = NULL;
   int16_t put_index = -1;
   struct tsch_packet *p = NULL;
+  data_tcflow = -1; /* by default. */
+  
   if(!tsch_is_locked()) {
     n = tsch_queue_add_nbr(addr);
     if(n != NULL) {
@@ -254,11 +265,34 @@ tsch_queue_add_packet(const linkaddr_t *addr, uint8_t max_transmissions,
             p->ret = MAC_TX_DEFERRED;
             p->transmissions = 0;
             p->max_transmissions = max_transmissions;
+
+            /* show queuebuf information. */
+            uint8_t dataLen = queuebuf_datalen(p->qb);
+            // for(uint8_t i = 0; i < dataLen; i++) {
+            //   uint8_t data = ((uint8_t *)queuebuf_dataptr(p->qb))[i];
+            //   PRINTF("%02x ", data);
+            // }
+            // PRINTF("\n");
+
+            /* check coap have created packet, if will, print it. */
+            if(dataLen >= 100 && ((uint8_t *)queuebuf_dataptr(p->qb))[0] == 0x21 &&
+               ((uint8_t *)queuebuf_dataptr(p->qb))[dataLen - 4] == 0xf0 &&
+               ((uint8_t *)queuebuf_dataptr(p->qb))[dataLen - 3] == 0xff) {
+              data_tcflow = ((uint8_t *)queuebuf_dataptr(p->qb))[24]; /* 24 is tcflow location in queuebuf. */
+              PRINTF("Traffic classes In TSCH queue : %02x\n", data_tcflow);
+              PRINTF("UIP_IP_BUF->tcflow=%d\n", UIP_IP_BUF->tcflow);
+            }
+            
+
+#if ENABLE_QOS_WHITE
+            tsch_queue_resorting_ringbuf_priority(n, p);
+#else
             /* Add to ringbuf (actual add committed through atomic operation) */
             n->tx_array[put_index] = p;
             ringbufindex_put(&n->tx_ringbuf);
             LOG_DBG("packet is added put_index %u, packet %p\n",
                    put_index, p);
+#endif /* ENABLE_QOS_WHITE */
             return p;
           } else {
             memb_free(&packet_memb, p);
@@ -269,6 +303,78 @@ tsch_queue_add_packet(const linkaddr_t *addr, uint8_t max_transmissions,
   }
   LOG_ERR("! add packet failed: %u %p %d %p %p\n", tsch_is_locked(), n, put_index, p, p ? p->qb : NULL);
   return 0;
+}
+/*---------------------------------------------------------------------------*/
+/* Resorting ringbuf packet by priority */
+void
+tsch_queue_resorting_ringbuf_priority(struct tsch_neighbor *n, struct tsch_packet *p)
+{
+  int16_t put_index = ringbufindex_peek_put(&n->tx_ringbuf); /* peek put ringbuf data. */
+  uint8_t ringbufindex_ELM = ringbufindex_elements(&n->tx_ringbuf);
+
+  PRINTF("Data Traffice class value : %02x , %d , Rinbuffer Index Elements : %d .\n", data_tcflow, data_tcflow, ringbufindex_ELM);
+  /* if (data_tcflow != -1 && ringbufindex_ELM > 0) */
+  if(ringbufindex_ELM > 0) {
+    PRINTF(" HELLO I'M IN FUNCTION. \n");
+    pkt_priority_sorting(n, p);
+  } else {
+    PRINTF(" ringbufindex_ELM empty & place \n");
+    n->tx_array[put_index] = p;
+    ringbufindex_put(&n->tx_ringbuf); /* input ringbuf. */
+  }
+}
+
+void
+pkt_priority_sorting(struct tsch_neighbor *n, struct tsch_packet *p)
+{
+
+  uint8_t ringbufSize = ringbufindex_size(&n->tx_ringbuf); /* %16 for loop ring. */
+  int8_t ringbufindex_ELM = ringbufindex_elements(&n->tx_ringbuf);
+  int16_t put_index = ringbufindex_peek_put(&n->tx_ringbuf); /* peek put ringbuf data. */
+  uint8_t current_packet_tcflow = ((uint8_t *)queuebuf_dataptr(p->qb))[24];
+
+  int16_t i = put_index;
+  PRINTF("Start the put_index : %d \n", i);
+
+  while(1) {
+    int8_t previous_index;
+
+    if(i < 0) {
+      i = (ringbufSize - 1);        /* fix the i < 0 , will crash; */
+    }
+    PRINTF("put_index : %d\n", i);
+    PRINTF("left_Pkt_To_Scan: % d\n", ringbufindex_ELM);
+    if(ringbufindex_ELM == 0) {
+      break;
+    }
+
+    if(i == 0) {
+      previous_index = (ringbufSize - 1);
+    } else {
+      previous_index = i - 1;
+    }
+
+    struct tsch_packet *temp_p_p = (n->tx_array[previous_index]); /* previous packet to temp_p. */
+    uint8_t previous_packet_tcflow = ((uint8_t *)queuebuf_dataptr(temp_p_p->qb))[24];
+
+    /* if the position[24] of packet in is not 0~2(which means it might not be COAP packet) regard them with priority=0 */
+    if(current_packet_tcflow < 0 || current_packet_tcflow > 2) {
+      current_packet_tcflow = 0;
+    }
+    if(previous_packet_tcflow < 0 || previous_packet_tcflow > 2) {
+      previous_packet_tcflow = 0;
+    }
+    PRINTF("tcflow_current : %d   tcflow_previous: %d \n", current_packet_tcflow, previous_packet_tcflow);
+    if(current_packet_tcflow <= previous_packet_tcflow) {
+      break;
+    }
+    n->tx_array[i] = n->tx_array[previous_index];
+    i = i - 1; /* put_index */
+    ringbufindex_ELM = ringbufindex_ELM - 1; /* left_Pkt_To_Scan */
+  }
+  n->tx_array[i] = p;
+  PRINTF("End the put_index : %d\n", i);
+  ringbufindex_put(&n->tx_ringbuf); /* input ringbuf. */
 }
 /*---------------------------------------------------------------------------*/
 /* Returns the number of packets currently in any TSCH queue */

@@ -311,6 +311,13 @@
 #define TSCH_QUEUE_MAX_NEIGHBOR_QUEUES ((NBR_TABLE_CONF_MAX_NEIGHBORS) + 2)
 #endif
 
+/* For QoS */
+#if ENABLE_QOS_WHITE
+#define TSCH_ENABLE_QOS 1
+#else
+#define TSCH_ENABLE_QOS 0
+#endif
+
 /******** Configuration: scheduling  *******/
 
 /* Initializes TSCH with a 6TiSCH minimal schedule */

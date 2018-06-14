@@ -64,6 +64,12 @@ static uint16_t current_mid = 0;
 
 coap_status_t coap_status_code = NO_ERROR;
 const char *coap_error_message = "";
+
+uint8_t packet_priority = 0;
+int priority_flag = 0;
+
+/* direct access into the buffer */
+#define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 /*---------------------------------------------------------------------------*/
 /*- Local helper functions --------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -1129,7 +1135,20 @@ coap_set_payload(coap_message_t *coap_pkt, const void *payload, size_t length)
   coap_pkt->payload = (uint8_t *)payload;
   coap_pkt->payload_len = MIN(COAP_MAX_CHUNK_SIZE, length);
 
+  if(priority_flag == 1) {
+    UIP_IP_BUF->tcflow = packet_priority;
+  }
+  priority_flag = 0;
+  //packet_priority = 0;
+
   return coap_pkt->payload_len;
+}
+/*---------------------------------------------------------------------------*/
+void 
+coap_set_uip_traffic_class(uint8_t priority)
+{
+  packet_priority = priority;
+  priority_flag = 1;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
