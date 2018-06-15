@@ -54,4 +54,15 @@
 /* Enable client-side support for COAP observe */
 #define COAP_OBSERVE_CLIENT 1
 
+/* Multiplies with chunk size, be aware of memory constraints. */
+#undef COAP_MAX_OPEN_TRANSACTIONS
+#define COAP_MAX_OPEN_TRANSACTIONS     4
+
+/* Must be <= open transactions, default is COAP_MAX_OPEN_TRANSACTIONS-1. */
+#undef COAP_MAX_OBSERVERS
+#define COAP_MAX_OBSERVERS             2
+
+/* QoS function optional*/
+#define ENABLE_QOS_WHITE           1
+
 #endif /* __PROJECT_ERBIUM_CONF_H__ */
