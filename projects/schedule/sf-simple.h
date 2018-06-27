@@ -51,7 +51,7 @@ int sf_simple_remove_links(linkaddr_t *peer_addr);
 #define NUMCELLS_MAX   20
 #define TIMEOUT_WAIT_FOR_RETRY_RANDOM 5
 #define HOUSEKEEPING_PERIOD 300
-#define SF_ENABLE_DYNAMIC 1
+#define SF_ENABLE_DYNAMIC 0
 
 extern const sixtop_sf_t sf_simple_driver;
 

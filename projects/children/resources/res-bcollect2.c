@@ -53,6 +53,15 @@ static uint32_t packet_counter = 0;
 
 static uint8_t packet_priority = 2;
 
+#if CONTIKI_TARGET_COOJA
+#include "node-id.h"
+void set_bcollect2() {
+  if(node_id == 2 || node_id == 8 || node_id == 9 || node_id == 10) {
+    packet_priority = 1;
+  }
+}
+#endif /* CONTIKI_TARGET_COOJA */
+
 #include "tsch.h"
 extern struct tsch_asn_t tsch_current_asn;
 

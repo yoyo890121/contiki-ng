@@ -131,21 +131,28 @@ PROCESS_THREAD(print_schedule, ev, data)
 PROCESS_THREAD(node_process, ev, data)
 {
   // static int added_num_of_links = 0;
-  static struct etimer et;
+  // static struct etimer et;
   // struct tsch_neighbor *n;
 
   PROCESS_BEGIN();
 
   sixtop_add_sf(&sf_simple_driver);
-  etimer_set(&et, CLOCK_SECOND * 3600);
-  PROCESS_YIELD_UNTIL(etimer_expired(&et));
-  etimer_reset(&et);
+  // etimer_set(&et, CLOCK_SECOND * 3600);
+  // PROCESS_YIELD_UNTIL(etimer_expired(&et));
+  // etimer_reset(&et);
 #if CONTIKI_TARGET_COOJA
+  extern void set_bcollect();
+  extern void set_bcollect2();
+  set_bcollect();
+  set_bcollect2();
+#endif /* CONTIKI_TARGET_COOJA */
+
+#if CONTIKI_TARGET_COOJA && 0
 #include "node-id.h"
   extern uint8_t event_threshold;
   if((node_id == 11) || (node_id) == 3) {
     event_threshold = 1;
-    printf("set event_threshold = 1\n");
+    printf("set event_threshold = %d\n", event_threshold);
   }
 #endif /* CONTIKI_TARGET_COOJA */
 

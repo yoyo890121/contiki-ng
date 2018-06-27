@@ -65,4 +65,9 @@
 /* QoS function optional*/
 #define ENABLE_QOS_WHITE           1
 
+/* Increase queues size*/
+#define QUEUEBUF_CONF_NUM 32
+#define TSCH_QUEUE_CONF_NUM_PER_NEIGHBOR 32
+#define TSCH_CONF_DEQUEUED_ARRAY_SIZE 32
+
 #endif /* __PROJECT_ERBIUM_CONF_H__ */
