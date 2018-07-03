@@ -136,11 +136,12 @@ PROCESS_THREAD(node_process, ev, data)
 
   sixtop_add_sf(&sf_simple_driver);
   etimer_set(&et, CLOCK_SECOND * 3600);
+#if CONTIKI_TARGET_COOJA && 0
   static uint8_t hours_count = 1;
   while (1) {
     PROCESS_YIELD_UNTIL(etimer_expired(&et));
     etimer_reset(&et);
-#if CONTIKI_TARGET_COOJA
+
     extern uint8_t event_threshold;
     
     switch (hours_count) {
@@ -173,14 +174,15 @@ PROCESS_THREAD(node_process, ev, data)
     }    
     printf("hours_count=%d set event_threshold=%d\n", hours_count, event_threshold);
     hours_count++;
-#endif /* CONTIKI_TARGET_COOJA */
   }
+#endif /* CONTIKI_TARGET_COOJA */
 
-
-#if CONTIKI_TARGET_COOJA && 0
+#if CONTIKI_TARGET_COOJA
+  PROCESS_YIELD_UNTIL(etimer_expired(&et));
+  etimer_reset(&et);
 #include "node-id.h"
   extern uint8_t event_threshold;
-  if((node_id == 11) || (node_id) == 3) {
+  if((node_id == 3) || (node_id == 12) || (node_id == 9) || (node_id == 14) || (node_id == 28)) {
     event_threshold = 1;
     printf("set event_threshold=%d\n", event_threshold);
   }

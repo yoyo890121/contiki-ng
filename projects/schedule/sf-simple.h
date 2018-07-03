@@ -48,7 +48,7 @@ int sf_simple_remove_links(linkaddr_t *peer_addr);
 
 #define SF_SIMPLE_MAX_LINKS  5
 #define SF_SIMPLE_SFID       0xf0
-#define NUMCELLS_MAX   50
+#define NUMCELLS_MAX   100
 #define TIMEOUT_WAIT_FOR_RETRY_RANDOM 5
 #define HOUSEKEEPING_PERIOD 300
 #define SF_ENABLE_DYNAMIC 1
