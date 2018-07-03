@@ -1038,13 +1038,15 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
           }
 
           if((numCellsUsed > NUMCELLS_MAX * LIM_NUMCELLSUSED_HIGH) && links_count <= 5) {
-            printf("dynamic add: ");  
+            sf_add_count++;
+            printf("dynamic add: %d ", sf_add_count);
             printf("links_count=%d ", links_count);
             printf("numCellsPassed=%d numCellsUsed=%d\n", numCellsPassed, numCellsUsed);
             sf_simple_add_links(&parent->addr, 1);
           }
           if((numCellsUsed < NUMCELLS_MAX * LIM_NUMCELLSUSED_LOW) && links_count > 1) {
-            printf("dynamic delete: ");
+            sf_delete_count++;
+            printf("dynamic delete: %d ", sf_delete_count);
             printf("links_count=%d ", links_count);
             printf("numCellsPassed=%d numCellsUsed=%d\n", numCellsPassed, numCellsUsed);
             sf_simple_remove_links(&parent->addr);

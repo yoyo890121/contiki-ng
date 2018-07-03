@@ -48,7 +48,7 @@ int sf_simple_remove_links(linkaddr_t *peer_addr);
 
 #define SF_SIMPLE_MAX_LINKS  5
 #define SF_SIMPLE_SFID       0xf0
-#define NUMCELLS_MAX   100
+#define NUMCELLS_MAX   50
 #define TIMEOUT_WAIT_FOR_RETRY_RANDOM 5
 #define HOUSEKEEPING_PERIOD 300
 #define SF_ENABLE_DYNAMIC 1
@@ -60,6 +60,8 @@ extern const sixtop_sf_t sf_simple_driver;
 #define LIM_NUMCELLSUSED_LOW  0.1
 uint8_t numCellsPassed;
 uint8_t numCellsUsed;
+uint16_t sf_add_count;
+uint16_t sf_delete_count;
 #endif /* SF_ENABLE_DYNAMIC */
 
 #endif /* !_SIXTOP_SF_SIMPLE_H_ */

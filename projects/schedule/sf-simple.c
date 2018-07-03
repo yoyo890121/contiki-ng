@@ -699,7 +699,9 @@ init(void)
   #if SF_ENABLE_DYNAMIC
   numCellsPassed = 0;
   numCellsUsed = 0;
-  #endif /* SF_ENABLE_DYNAMIC */
+  sf_add_count = 0;
+  sf_delete_count = 0;
+#endif /* SF_ENABLE_DYNAMIC */
 }
 
 const sixtop_sf_t sf_simple_driver = {
