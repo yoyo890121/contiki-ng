@@ -43,4 +43,9 @@
 #define UIP_CONF_TCP 1
 #endif
 
+/* Increase queues size*/
+#define QUEUEBUF_CONF_NUM 32
+#define TSCH_QUEUE_CONF_NUM_PER_NEIGHBOR 32
+#define TSCH_CONF_DEQUEUED_ARRAY_SIZE 32
+
 #endif /* PROJECT_CONF_H_ */
