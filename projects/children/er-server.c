@@ -106,23 +106,29 @@ PROCESS_THREAD(er_example_server, ev, data)
 }
 
 /*---------------------------------------------------------------------------*/
-#include "tsch.h"
-PROCESS_THREAD(print_schedule, ev, data)
+PROCESS_THREAD(print_schedule, ev, data) //for add delete test
 {
   static struct etimer etaa;
+  static uint8_t counter = 1;
   PROCESS_BEGIN();
-
-  etimer_set(&etaa, CLOCK_SECOND * 60);
+  etimer_set(&etaa, CLOCK_SECOND * 600);
+#if CONTIKI_TARGET_COOJA
+  extern uint8_t event_threshold;
   while(1) {
     PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
     etimer_reset(&etaa);
-    // struct tsch_neighbor *n = NULL;
-    // n = tsch_queue_get_nbr(&tsch_broadcast_address);
-    // printf("dedicated_tx_links_count=%d ", n->dedicated_tx_links_count-1); //-1 for EB slotframe Tx
-    // printf("numCellsPassed=%d numCellsUsed=%d\n", numCellsPassed, numCellsUsed);
-    // tsch_schedule_print();
+    if(counter%2 == 0) {
+      event_threshold = 20;
+    }else {
+      event_threshold = 1;
+    }
+    printf("counter=%d set event_threshold=%d\n", counter, event_threshold);
+    if(counter == 20) {
+      break;
+    }
+    counter++;
   }
-
+#endif /* CONTIKI_TARGET_COOJA */
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
@@ -177,7 +183,7 @@ PROCESS_THREAD(node_process, ev, data)
   }
 #endif /* CONTIKI_TARGET_COOJA */
 
-#if CONTIKI_TARGET_COOJA
+#if CONTIKI_TARGET_COOJA && 0
   PROCESS_YIELD_UNTIL(etimer_expired(&et));
   etimer_reset(&et);
 #include "node-id.h"
