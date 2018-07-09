@@ -18,7 +18,7 @@
       <success_ratio_rx>1.0</success_ratio_rx>
     </radiomedium>
     <events>
-      <logoutput>40000</logoutput>
+      <logoutput>4000000</logoutput>
     </events>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType

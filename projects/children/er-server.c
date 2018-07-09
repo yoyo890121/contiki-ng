@@ -112,20 +112,21 @@ PROCESS_THREAD(print_schedule, ev, data) //for add delete test
   static uint8_t counter = 1;
   PROCESS_BEGIN();
   etimer_set(&etaa, CLOCK_SECOND * 600);
-#if CONTIKI_TARGET_COOJA
+#if CONTIKI_TARGET_COOJA 
   extern uint8_t event_threshold;
   while(1) {
     PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
     etimer_reset(&etaa);
+    if(counter == 21) {
+      printf("add delete test END\n");
+      break;
+    }
     if(counter%2 == 0) {
       event_threshold = 20;
     }else {
       event_threshold = 1;
     }
-    printf("counter=%d set event_threshold=%d\n", counter, event_threshold);
-    if(counter == 20) {
-      break;
-    }
+    printf("counter=%d set event_threshold=%d\n", counter, event_threshold);   
     counter++;
   }
 #endif /* CONTIKI_TARGET_COOJA */

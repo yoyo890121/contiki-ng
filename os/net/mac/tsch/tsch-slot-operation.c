@@ -1037,7 +1037,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
             }
           }
 
-          if((numCellsUsed > NUMCELLS_MAX * LIM_NUMCELLSUSED_HIGH) && links_count <= 5) {
+          if((numCellsUsed > NUMCELLS_MAX * LIM_NUMCELLSUSED_HIGH)) {
             sf_add_count++;
             printf("dynamic add: %d ", sf_add_count);
             printf("links_count=%d ", links_count);
