@@ -132,6 +132,16 @@ PROCESS_THREAD(node_process, ev, data)
   static struct etimer etaa;
   PROCESS_BEGIN();
 
+  etimer_set(&etaa, CLOCK_SECOND * 600);
+  PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
+  etimer_reset(&etaa);
+
+#if CONTIKI_TARGET_COOJA
+  extern uint8_t event_threshold;
+  event_threshold = 20;
+  printf("set event_threshold=%d\n", event_threshold);
+#endif /* CONTIKI_TARGET_COOJA */
+
   etimer_set(&etaa, CLOCK_SECOND * 3600);
   PROCESS_YIELD_UNTIL(etimer_expired(&etaa));
   etimer_reset(&etaa);
