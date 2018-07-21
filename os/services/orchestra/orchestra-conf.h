@@ -72,6 +72,12 @@
 #define ORCHESTRA_UNICAST_PERIOD                  17
 #endif /* ORCHESTRA_CONF_UNICAST_PERIOD */
 
+#ifdef ORCHESTRA_CONF_UNICAST_CHANNEL
+#define ORCHESTRA_UNICAST_CHANNEL                  ORCHESTRA_CONF_UNICAST_CHANNEL
+#else /* ORCHESTRA_CONF_UNICAST_CHANNEL */
+#define ORCHESTRA_UNICAST_CHANNEL                 3
+#endif /* ORCHESTRA_CONF_UNICAST_CHANNEL */
+
 /* Is the per-neighbor unicast slotframe sender-based (if not, it is receiver-based).
  * Note: sender-based works only with RPL storing mode as it relies on DAO and
  * routing entries to keep track of children and parents. */

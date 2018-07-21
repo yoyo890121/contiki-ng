@@ -100,13 +100,13 @@ init(uint16_t sf_handle)
   channel_offset = sf_handle;
   /* Slotframe for unicast transmissions */
   sf_unicast = tsch_schedule_add_slotframe(slotframe_handle, ORCHESTRA_UNICAST_PERIOD);
-  rx_timeslot = get_node_timeslot(&linkaddr_node_addr);
+  rx_timeslot = get_node_timeslot(&linkaddr_node_addr); 
   /* Add a Tx link at each available timeslot. Make the link Rx at our own timeslot. */
   for(i = 0; i < ORCHESTRA_UNICAST_PERIOD; i++) {
     tsch_schedule_add_link(sf_unicast,
         LINK_OPTION_SHARED | LINK_OPTION_TX | ( i == rx_timeslot ? LINK_OPTION_RX : 0 ),
         LINK_TYPE_NORMAL, &tsch_broadcast_address,
-        i, channel_offset);
+        i, channel_offset+(i%ORCHESTRA_UNICAST_CHANNEL));
   }
 }
 /*---------------------------------------------------------------------------*/
